@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Jet Drive</string>
+    <string name="google_login">Google oauth login icon</string>
+</resources>

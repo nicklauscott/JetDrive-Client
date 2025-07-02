@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Jet Drive</string>
+    <string name="google_login">Google oauth login icon</string>
+    <string name="server_client_id">551260504895-mofqeookk23lmol3g8r9npjol9r03fm5.apps.googleusercontent.com</string>
+    <string name="home_screen">Home</string>
+    <string name="file_screen">File</string>
+    <string name="profile_screen">Profile</string>
+    <string name="home_description">Home Screen</string>
+    <string name="file_description">File Screen</string>
+    <string name="profile_description">Profile Screen</string>
+    <string name="active_file_operation">Unfinished upload or download file</string>
+    <string name="search_icon">Search files</string>
+    <string name="file_icon">File icon</string>
+    <string name="more_option">"Show more option icon "</string>
+    <string name="sort_order">Sort order icon</string>
+    <string name="upload_icon">Upload File icon</string>
+    <string name="action_icon">File action</string>
+    <string name="empty_folder">EMPTY FOLDER</string>
+    <string name="unknown_error">UNKNOWN ERROR</string>
+    <string name="download_icon">Download icon</string>
+    <string name="back_icon">Back icon</string>
+    <string name="rename">Rename</string>
+    <string name="cancel">Cancel</string>
+    <string name="show_more">Show more</string>
+    <string name="delete_message">Move to trash?</string>
+    <string name="delete">Delete</string>
+    <string name="create_folder_icon">Create new folder</string>
+    <string name="move">Move</string>
+    <string name="copy">Copy</string>
+    <string name="create">Create</string>
+
+</resources>
