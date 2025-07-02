@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class FileNodeRenameRequestDTO(
-    val name: String,
+    val id: String,
     val newName: String
 )

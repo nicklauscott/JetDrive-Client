@@ -6,7 +6,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class FileListScreen(val fileId: String, val title: String = "Drive"): NavKey
+data class FileListScreen(val fileNode: FileNode): NavKey
 
 @Serializable
 data class DetailScreen(val fileNode: FileNode): NavKey

@@ -8,17 +8,17 @@ import java.util.Locale
 
 @Serializable
 data class FileNode(
-    val id: String,
-    val name: String,
-    val type: FileType,
-    private val size: Long,
-    val parentId: String?,
-    val hasThumbnail: Boolean,
+    val id: String = "-1",
+    val name: String = "Drive",
+    val type: FileType = FileType.Unknown,
+    private val size: Long = 0L,
+    val parentId: String? = null,
+    val hasThumbnail: Boolean = false,
     val mimeType: String? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
-    private val createdAt: LocalDateTime,
+    private val createdAt: LocalDateTime = LocalDateTime.now(),
     @Serializable(with = LocalDateTimeSerializer::class)
-    private val updatedAt: LocalDateTime
+    private val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
     val createdDate = formatDateTime(createdAt)
     val updatedDate = formatDateTime(updatedAt)

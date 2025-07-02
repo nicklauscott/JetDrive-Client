@@ -40,7 +40,7 @@ fun FileNodeCell(
     modifier: Modifier = Modifier,
     fileNode: FileNode,
     onMoreClick: () -> Unit,
-    onClick: (String, String) -> Unit
+    onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val fileIcon by remember { mutableIntStateOf(getFileIcon(fileNode.mimeType ?: "-1")) }
@@ -53,7 +53,7 @@ fun FileNodeCell(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .clickable { onClick(fileNode.id, fileNode.name) }
+                .clickable { onClick() }
                 .padding(1.percentOfScreenHeight()),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -145,7 +145,7 @@ fun TextButton(
     ) {
         Text(
             label,
-            style = texStyle, //MaterialTheme.typography.bodyMedium,
+            style = texStyle,
             color = if (enabled) MaterialTheme.colorScheme.inverseOnSurface
             else MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
         )

@@ -1,5 +1,6 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_list.component
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
+import com.niclauscott.jetdrive.core.util.TAG
 
 @Composable
 fun RenameDialog(

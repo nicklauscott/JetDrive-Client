@@ -5,7 +5,7 @@ import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 
 sealed interface FileScreenUIEvent {
     data object GoBack: FileScreenUIEvent
-    data class OpenFileNode(val fileId: String, val title: String): FileScreenUIEvent
+    data class OpenFileNode(val fileNode: FileNode): FileScreenUIEvent
     data class Sort(val sortOrder: SortOrder, val sortType: SortType): FileScreenUIEvent
     data class FileDetails(val fileNode: FileNode): FileScreenUIEvent
     data class Download(val fileId: String): FileScreenUIEvent

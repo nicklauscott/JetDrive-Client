@@ -10,6 +10,7 @@ import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCopyRequest
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeMoveRequestDTO
+import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeRenameRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeTreeResponse
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
@@ -35,16 +36,17 @@ class FileRepositoryImpl(
     private val client: HttpClient,
     private val cache: InMemoryCache<String, CachedEntry>
 ): FileRepository {
-    override suspend fun getRootFiles(): FileResponse<List<FileNode>> {
+    override suspend fun getRootFiles(useCache: Boolean): FileResponse<List<FileNode>> {
         return try {
             val now = System.currentTimeMillis()
             val cached = getCachedRootFiles()
 
-            if (cached.isNotEmpty() && now - cached.first().cachedAt <= 2 * 60 * 1000) {
-                return FileResponse.Successful(cached.map { it.data })
+            if (useCache) {
+                if (cached.isNotEmpty() && now - cached.first().cachedAt <= 2 * 60 * 1000) {
+                    return FileResponse.Successful(cached.map { it.data })
+                }
             }
 
-            Log.d(TAG("SplashScreenViewModel"), "getRootFiles: 1")
             val response = client.request("$baseUrl/files") {
                 method = HttpMethod.Get
                 headers {
@@ -54,12 +56,10 @@ class FileRepositoryImpl(
             }
 
             if (response.status != HttpStatusCode.OK) {
-                Log.d(TAG("FileRepositoryImpl"), "getRootFiles: 2")
                 val error = response.body<ErrorMessageDTO>()
                 return FileResponse.Failure(error.message)
             }
 
-            Log.d(TAG("FileRepositoryImpl"), "getRootFiles: 2a")
             val result = response.body<FileNodeTreeResponse>()
 
             val fileNodes = result.children.map { it.toFileNode() }
@@ -69,13 +69,10 @@ class FileRepositoryImpl(
                     updatedAt = result.updatedAt ?: LocalDateTime.now()))
             }
 
-            Log.d(TAG("FileRepositoryImpl"), "getRootFiles: 3")
             FileResponse.Successful(fileNodes)
         } catch (ex: ConnectTimeoutException) {
-            Log.d(TAG("FileRepositoryImpl"), "getRootFiles: 4 -> ${ex.message}")
             FileResponse.Failure("Connection timeout. Try again")
         } catch (ex: Exception) {
-            Log.d(TAG("FileRepositoryImpl"), "getRootFiles: 5 -> ${ex.message}")
             FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
         }
     }
@@ -101,7 +98,7 @@ class FileRepositoryImpl(
         } catch (ex: ConnectTimeoutException) {
             FileResponse.Failure("Connection timeout. Try again")
         } catch (ex: Exception) {
-            FileResponse.Failure("Google SignIn Failed. Check your internet connection")
+            FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
         }
     }
 
@@ -181,16 +178,35 @@ class FileRepositoryImpl(
 
            FileResponse.Successful(fileNode)
        } catch (ex: ConnectTimeoutException) {
-           Log.d(TAG("FileRepositoryImpl"), "createFolder -> 1 ex: ${ex.message}")
            FileResponse.Failure("Connection timeout. Try again")
        } catch (ex: Exception) {
-           Log.d(TAG("FileRepositoryImpl"), "createFolder -> 2 ex: ${ex.message}")
            FileResponse.Failure("Newtwork. Check your error. internet connection")
        }
     }
 
     override suspend fun renameFileNode(fileId: String, newName: String): FileResponse<Unit>  {
-        TODO("Not yet implemented")
+        return try {
+            val response = client.request("$baseUrl/files/rename") {
+                method = HttpMethod.Patch
+                headers {
+                    append(HttpHeaders.Accept, ContentType.Application.Json.toString())
+                    append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                }
+                setBody(FileNodeRenameRequestDTO(fileId, newName))
+            }
+
+            if (response.status != HttpStatusCode.Accepted) {
+                val error = response.body<ErrorMessageDTO>()
+                return FileResponse.Failure(error.message)
+            }
+
+            cache.remove(fileId)
+            FileResponse.Successful(Unit)
+        } catch (ex: ConnectTimeoutException) {
+            FileResponse.Failure("Connection timeout. Try again")
+        } catch (ex: Exception) {
+            FileResponse.Failure("Newtwork. Check your error. internet connection")
+        }
     }
 
     override suspend fun copyFileNode(fileId: String, parentId: String?): FileResponse<FileNode>  {
@@ -262,7 +278,24 @@ class FileRepositoryImpl(
     }
 
     override suspend fun deleteFileNode(fileId: String): FileResponse<Unit>  {
-        TODO("Not yet implemented")
+        return try {
+            val response = client.request("$baseUrl/files/delete/$fileId") {
+                method = HttpMethod.Delete
+            }
+
+            if (response.status != HttpStatusCode.NoContent) {
+                val error = response.body<ErrorMessageDTO>()
+                return FileResponse.Failure(error.message)
+            }
+
+            cache.remove(fileId)
+
+            FileResponse.Successful(Unit)
+        } catch (ex: ConnectTimeoutException) {
+            FileResponse.Failure("Connection timeout. Try again")
+        } catch (ex: Exception) {
+            FileResponse.Failure("Newtwork. Check your error. internet connection")
+        }
     }
 
     private fun getCachedRootFiles(): List<CachedEntry> {

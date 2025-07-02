@@ -13,7 +13,7 @@ val appModule = module {
         else "http://127.0.0.1:8080"
         //baseUrl
 
-        "http://192.168.86.127:8080"
+        "http://192.168.86.127:9001"
         //"http://localhost:8080"
     }
 

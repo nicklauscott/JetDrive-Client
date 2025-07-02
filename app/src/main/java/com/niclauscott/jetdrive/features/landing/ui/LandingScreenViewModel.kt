@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.navigation3.runtime.NavBackStack
+import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileListScreen
 import com.niclauscott.jetdrive.features.landing.ui.state.HomeScreenUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +38,7 @@ class LandingScreenViewModel: ViewModel() {
     val profileScreenBackStack = NavBackStack()
 
     init {
-        fileScreenBackStack.add(FileListScreen("-1"))
+        fileScreenBackStack.add(FileListScreen(FileNode()))
     }
 
     fun hideBottomBars() {

@@ -42,17 +42,13 @@ import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
-import com.niclauscott.jetdrive.features.auth.ui.screen.login.state.LoginScreenUIEffect
-import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component.CreateNewFolderDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component.FileCopyMoveNodeCell
 import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component.FileCopyMoveTopBar
 import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEvent
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.RenameDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.TextButton
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 
 @Composable
 fun FileCopyMoveScreen(
@@ -123,7 +119,8 @@ fun FileCopyMoveScreen(
                     onClick = {  viewModel.onEvent(FileCopyMoveScreenUIEvent.Cancel) }
                 )
                 Spacer(modifier = Modifier.width(3.percentOfScreenWidth()))
-                val enabled = state.value.parentId != state.value.fileNode.parentId
+                val enabled = (state.value.parentId != state.value.fileNode.parentId)
+                        || action == Action.Copy
                 TextButton(
                     label = getString(context, if (action == Action.Copy) R.string.copy else R.string.move),
                     enabled = enabled,

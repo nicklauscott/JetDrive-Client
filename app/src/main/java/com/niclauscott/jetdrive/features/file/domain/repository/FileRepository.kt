@@ -5,7 +5,7 @@ import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import java.time.LocalDateTime
 
 interface FileRepository {
-    suspend fun getRootFiles(): FileResponse<List<FileNode>>
+    suspend fun getRootFiles(useCache: Boolean): FileResponse<List<FileNode>>
     suspend fun search(searchQuery: String): FileResponse<List<FileNode>>
     suspend fun getChildren(
         parentID: String, ifUpdatedSince: LocalDateTime?, useCache: Boolean

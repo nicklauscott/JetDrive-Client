@@ -21,9 +21,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 class FileCopyMoveScreenViewModel(
-    private val fileNode: FileNode,
-    private val folderId: String,
-    title: String,
+    private val fileNode: FileNode, private val folderId: String, title: String,
     private val action: Action,
     private val backStack: NavBackStack,
     private val landingScreenViewModel: LandingScreenViewModel,
@@ -82,8 +80,9 @@ class FileCopyMoveScreenViewModel(
             }
 
             if (response is FileResponse.Successful) {
-                FileListViewModelRefreshRegistry.markForRefresh(state.value.parentId ?: "-1")
-                FileListViewModelRefreshRegistry.markForRefresh(response.data.parentId ?: "-1")
+                FileListViewModelRefreshRegistry.markForRefresh(folderId) // new folder
+                // old folder
+                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
                 backStack.removeAll { it is CopyMoveScreen }
                 landingScreenViewModel.showFab()
                 landingScreenViewModel.showBottomBars()
@@ -125,7 +124,7 @@ class FileCopyMoveScreenViewModel(
         viewModelScope.launch {
             _state.value = state.value.copy(isLoadingFiles = true)
 
-            val response = if (folderId == "-1") fileRepository.getRootFiles()
+            val response = if (folderId == "-1") fileRepository.getRootFiles(false)
             else fileRepository.getChildren(folderId, null, true)
 
             if (response is FileResponse.Successful) {

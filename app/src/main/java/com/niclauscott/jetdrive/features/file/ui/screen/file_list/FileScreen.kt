@@ -1,5 +1,6 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_list
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
+import com.niclauscott.jetdrive.core.util.TAG
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DeleteDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileNodeCell
@@ -47,10 +49,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrde
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FileScreen(
-    modifier: Modifier = Modifier,
-    viewModel: FileScreenViewModel
-) {
+fun FileScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
 
     val context = LocalContext.current
 
@@ -66,9 +65,7 @@ fun FileScreen(
     var showRenameDialog by rememberSaveable { mutableStateOf<FileNode?>(null) }
     var showDeleteDialog by rememberSaveable { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        viewModel.onEvent(FileScreenUIEvent.RefreshData)
-    }
+    LaunchedEffect(Unit) { viewModel.onEvent(FileScreenUIEvent.RefreshData) }
 
     if (showRenameDialog != null) {
         RenameDialog(
@@ -144,7 +141,7 @@ fun FileScreen(
                         }
                     }
                     Action.Delete -> {
-                        selectedFileNode?.let { showDeleteDialog = it.name }
+                        selectedFileNode?.let { showDeleteDialog = it.id }
                     }
                     Action.Info -> {
                         selectedFileNode?.let { fileNode ->
@@ -245,9 +242,7 @@ fun FileScreen(
                         FileNodeCell(fileNode = it, onMoreClick = {
                             showBottomSheet = true
                             selectedFileNode = it
-                        }) { fileId, fileName ->
-                            viewModel.onEvent(FileScreenUIEvent.OpenFileNode(fileId, fileName))
-                        }
+                        }) { viewModel.onEvent(FileScreenUIEvent.OpenFileNode(it)) }
                     }
                 }
             }

@@ -11,34 +11,38 @@ import com.niclauscott.jetdrive.core.util.TAG
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.domain.repository.FileRepository
+import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CopyMoveScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DetailScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileListScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUiState
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortType
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 class FileScreenViewModel(
-    private val fileId: String,
-    title: String,
+    private val fileNode: FileNode,
     private val backStack: NavBackStack,
     private val fileRepository: FileRepository
 ): ViewModel() {
 
     private val _state: MutableState<FileScreenUiState> = mutableStateOf(FileScreenUiState(
-        parentId = if (fileId == "-1") null else fileId,
-        title = title
+        parentId = if (fileNode.id == "-1") null else fileNode.id, title = fileNode.name
     ))
     val state: State<FileScreenUiState> = _state
+
+    private val _effect: MutableSharedFlow<FileScreenUIEffect> = MutableSharedFlow()
+    val effect: SharedFlow<FileScreenUIEffect> = _effect
 
     init { loadContent() }
 
     fun onEvent(event: FileScreenUIEvent) {
-        Log.e(TAG("FileScreenViewModel"), "onEvent event: $event")
         when (event) {
             is FileScreenUIEvent.Copy -> {
                 backStack.add(CopyMoveScreen(
@@ -48,7 +52,7 @@ class FileScreenViewModel(
                     action = Action.Copy
                 ))
             }
-            is FileScreenUIEvent.Delete -> TODO()
+            is FileScreenUIEvent.Delete -> delete(event.fileId)
             is FileScreenUIEvent.Download -> TODO()
             is FileScreenUIEvent.FileDetails -> {
                 backStack.add(DetailScreen(event.fileNode))
@@ -64,10 +68,41 @@ class FileScreenViewModel(
                     action = Action.Move
                 ))
             }
-            is FileScreenUIEvent.OpenFileNode -> backStack.add(FileListScreen(event.fileId, title = event.title))
-            is FileScreenUIEvent.Rename -> TODO()
+            is FileScreenUIEvent.OpenFileNode -> {
+                if (FileListViewModelRefreshRegistry.shouldRefresh(folderId = fileNode.id)) {
+                    FileListViewModelRefreshRegistry.markForRefresh(event.fileNode.id)
+                }
+                backStack.add(FileListScreen(event.fileNode))
+            }
+            is FileScreenUIEvent.Rename -> rename(event.fileId, event.newName)
             is FileScreenUIEvent.Sort -> sort(event.sortType, event.sortOrder)
             FileScreenUIEvent.RefreshData -> onAppear()
+        }
+    }
+
+    private fun delete(fileId: String) {
+        viewModelScope.launch {
+            val response = fileRepository.deleteFileNode(fileId = fileId)
+            if (response is FileResponse.Successful) {
+                Log.d(TAG("FileScreenViewModel"), "delete 2: fileId: $fileId")
+                loadContent(false)
+                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+            } else if (response is FileResponse.Failure) {
+                Log.d(TAG("FileScreenViewModel"), "delete 2: fileId: $fileId")
+                _effect.emit(FileScreenUIEffect.ShowSnackBar(response.message))
+            }
+        }
+    }
+
+    private fun rename(fileId: String, newName: String) {
+        viewModelScope.launch {
+            val response = fileRepository.renameFileNode(fileId = fileId, newName = newName)
+            if (response is FileResponse.Successful) {
+                loadContent(false)
+                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+            } else if (response is FileResponse.Failure){
+                _effect.emit(FileScreenUIEffect.ShowSnackBar(response.message))
+            }
         }
     }
 
@@ -104,8 +139,9 @@ class FileScreenViewModel(
     }
 
     private fun onAppear() {
-        if (FileListViewModelRefreshRegistry.shouldRefresh(folderId = fileId)) {
-            FileListViewModelRefreshRegistry.clear(folderId = fileId)
+        if (FileListViewModelRefreshRegistry.shouldRefresh(folderId = fileNode.id)) {
+            FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+            FileListViewModelRefreshRegistry.clear(folderId = fileNode.id)
             loadContent(useCache = false)
         }
     }
@@ -113,9 +149,8 @@ class FileScreenViewModel(
     private fun loadContent(useCache: Boolean = true) {
         viewModelScope.launch {
             _state.value = state.value.copy(isLoadingFiles = true)
-
-            val response = if (fileId == "-1") fileRepository.getRootFiles()
-            else fileRepository.getChildren(fileId, null, useCache)
+            val response = if (fileNode.id == "-1") fileRepository.getRootFiles(useCache)
+            else fileRepository.getChildren(fileNode.id, null, useCache)
 
             if (response is FileResponse.Successful) {
                 _state.value = state.value.copy(

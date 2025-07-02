@@ -1,0 +1,17 @@
+Index: app/src/main/java/com/niclauscott/jetdrive/features/file/ui/screen/copy_move/FileCopyMoveScreenViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/niclauscott/jetdrive/features/file/ui/screen/copy_move/FileCopyMoveScreenViewModel.kt b/app/src/main/java/com/niclauscott/jetdrive/features/file/ui/screen/copy_move/FileCopyMoveScreenViewModel.kt
+--- a/app/src/main/java/com/niclauscott/jetdrive/features/file/ui/screen/copy_move/FileCopyMoveScreenViewModel.kt	
++++ b/app/src/main/java/com/niclauscott/jetdrive/features/file/ui/screen/copy_move/FileCopyMoveScreenViewModel.kt	(date 1751462846805)
+@@ -83,7 +83,7 @@
+ 
+             if (response is FileResponse.Successful) {
+                 FileListViewModelRefreshRegistry.markForRefresh(state.value.parentId ?: "-1")
+-                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
++                FileListViewModelRefreshRegistry.markForRefresh(response.data.parentId ?: "-1")
+                 backStack.removeAll { it is CopyMoveScreen }
+                 landingScreenViewModel.showFab()
+                 landingScreenViewModel.showBottomBars()
