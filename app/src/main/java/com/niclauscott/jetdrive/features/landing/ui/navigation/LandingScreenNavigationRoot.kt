@@ -36,7 +36,7 @@ fun LandingScreenNavigationRoot(
 
                 is FileScreen -> {
                     NavEntry(key = key) {
-                        FileListNavigationRoot(landingScreenViewModel = viewModel)
+                        FileListNavigationRoot(modifier = Modifier, landingScreenViewModel = viewModel)
                     }
                 }
 

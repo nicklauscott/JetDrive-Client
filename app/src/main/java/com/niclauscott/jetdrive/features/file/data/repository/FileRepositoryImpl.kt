@@ -3,7 +3,6 @@ package com.niclauscott.jetdrive.features.file.data.repository
 import android.util.Log
 import com.niclauscott.jetdrive.core.cache.InMemoryCache
 import com.niclauscott.jetdrive.core.cache.model.CachedEntry
-import com.niclauscott.jetdrive.core.http_client.model.RefreshRequestDTO
 import com.niclauscott.jetdrive.core.model.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.util.TAG
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCopyRequestDTO
@@ -14,7 +13,6 @@ import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeRenameReque
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeTreeResponse
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
-import com.niclauscott.jetdrive.features.file.domain.model.FileNodeTree
 import com.niclauscott.jetdrive.features.file.domain.model.mapper.toFileNode
 import com.niclauscott.jetdrive.features.file.domain.repository.FileRepository
 import io.ktor.client.HttpClient
@@ -23,7 +21,6 @@ import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -36,6 +33,9 @@ class FileRepositoryImpl(
     private val client: HttpClient,
     private val cache: InMemoryCache<String, CachedEntry>
 ): FileRepository {
+
+    val fileUrl = "$baseUrl/files"
+
     override suspend fun getRootFiles(useCache: Boolean): FileResponse<List<FileNode>> {
         return try {
             val now = System.currentTimeMillis()
@@ -47,7 +47,7 @@ class FileRepositoryImpl(
                 }
             }
 
-            val response = client.request("$baseUrl/files") {
+            val response = client.request(fileUrl) {
                 method = HttpMethod.Get
                 headers {
                     append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -79,7 +79,8 @@ class FileRepositoryImpl(
 
     override suspend fun search(searchQuery: String): FileResponse<List<FileNode>> {
         return try {
-            val response = client.request("$baseUrl/search/$searchQuery") {
+            Log.d(TAG("FileRepositoryImpl"), "search searchQuery: $searchQuery")
+            val response = client.request("$fileUrl/search/$searchQuery") {
                 method = HttpMethod.Get
                 headers {
                     append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -89,10 +90,13 @@ class FileRepositoryImpl(
 
             if (response.status != HttpStatusCode.OK) {
                 val error = response.body<ErrorMessageDTO>()
+                Log.d(TAG("FileRepositoryImpl"), "search error: $error")
                 return FileResponse.Failure(error.message)
             }
 
             val result = response.body<FileNodeTreeResponse>()
+            Log.d(TAG("FileRepositoryImpl"), "search: $result")
+
             val fileNodes = result.children.map { it.toFileNode() }
             FileResponse.Successful(fileNodes)
         } catch (ex: ConnectTimeoutException) {
@@ -103,21 +107,19 @@ class FileRepositoryImpl(
     }
 
     override suspend fun getChildren(
-        parentID: String,
-        ifUpdatedSince: LocalDateTime?,
-        useCache: Boolean
+        parentId: String, ifUpdatedSince: LocalDateTime?, useCache: Boolean
     ): FileResponse<List<FileNode>> {
         return try {
             val now = System.currentTimeMillis()
 
             if (useCache) {
-                val cached = getCachedChildren(parentID)
+                val cached = getCachedChildren(parentId)
                 if (cached.isNotEmpty() && cached.any { now - it.cachedAt <= 2 * 60 * 1000 }) {
                     return FileResponse.Successful(cached.map { it.data })
                 }
             }
 
-            val response = client.request("$baseUrl/files/$parentID/children") {
+            val response = client.request("$fileUrl/$parentId/children") {
                 method = HttpMethod.Get
                 headers {
                     append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -154,7 +156,7 @@ class FileRepositoryImpl(
        return try {
            val now = System.currentTimeMillis()
 
-           val response = client.request("$baseUrl/files/create") {
+           val response = client.request("$fileUrl/create") {
                method = HttpMethod.Post
                headers {
                    append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -186,7 +188,7 @@ class FileRepositoryImpl(
 
     override suspend fun renameFileNode(fileId: String, newName: String): FileResponse<Unit>  {
         return try {
-            val response = client.request("$baseUrl/files/rename") {
+            val response = client.request("$fileUrl/rename") {
                 method = HttpMethod.Patch
                 headers {
                     append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -213,7 +215,7 @@ class FileRepositoryImpl(
         return try {
             val now = System.currentTimeMillis()
 
-            val response = client.request("$baseUrl/files/copy") {
+            val response = client.request("$fileUrl/copy") {
                 method = HttpMethod.Patch
                 headers {
                     append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -247,7 +249,7 @@ class FileRepositoryImpl(
         return try {
             val now = System.currentTimeMillis()
 
-            val response = client.request("$baseUrl/files/move") {
+            val response = client.request("$fileUrl/move") {
                 method = HttpMethod.Patch
                 headers {
                     append(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -279,7 +281,7 @@ class FileRepositoryImpl(
 
     override suspend fun deleteFileNode(fileId: String): FileResponse<Unit>  {
         return try {
-            val response = client.request("$baseUrl/files/delete/$fileId") {
+            val response = client.request("$fileUrl/delete/$fileId") {
                 method = HttpMethod.Delete
             }
 

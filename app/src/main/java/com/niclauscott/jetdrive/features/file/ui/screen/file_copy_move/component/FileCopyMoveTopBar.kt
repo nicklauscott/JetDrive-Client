@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component
+package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row

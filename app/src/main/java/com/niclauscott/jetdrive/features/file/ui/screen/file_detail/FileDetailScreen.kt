@@ -1,76 +1,117 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_detail
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
+import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.domain.util.getFileIcon
-import com.niclauscott.jetdrive.features.file.ui.component.CustomDropDownMenu
 import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.component.DetailCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.component.FileDetailTopBar
+import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.state.FileDetailScreenUIEffect
+import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.state.FileDetailScreenUIEvent
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DeleteDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.RenameDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.ActionType
-import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 
 @Composable
 fun FileDetailScreen(
     modifier: Modifier = Modifier,
-    fileNode: FileNode,
-    landingScreenViewModel: LandingScreenViewModel,
-    onBackClick: () -> Unit
+    viewModel: FileDetailScreenViewModel
 ) {
-    val fileIcon by remember { mutableIntStateOf(getFileIcon(fileNode.mimeType ?: "-1")) }
     val context = LocalContext.current
 
-    DisposableEffect(Unit) {
-        landingScreenViewModel.hideBottomBars()
-        landingScreenViewModel.hideFab()
-        onDispose {
-            landingScreenViewModel.showBottomBars()
-            landingScreenViewModel.showFab()
+    val fileNode = viewModel.state.value.fileNode
+    val fileIcon by remember { mutableIntStateOf(getFileIcon(fileNode.mimeType ?: "-1")) }
+    var showRenameDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is FileDetailScreenUIEffect.ShowSnackBar -> {
+                    Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
+                    snackbarHostState.showSnackbar(effect.message)
+                }
+            }
+        }
+    }
+
+    if (showRenameDialog) {
+        RenameDialog(
+            fileId = fileNode.id,
+            fileName = fileNode.name,
+            onDismiss = { showRenameDialog = false }
+        ) { _, newName ->
+            viewModel.onEvent(FileDetailScreenUIEvent.Rename(newName = newName))
+            showRenameDialog = false
+        }
+    }
+
+    if (showDeleteDialog) {
+        DeleteDialog(
+            fileId = fileNode.id,
+            onDismiss = { showDeleteDialog = false }
+        ) {
+            viewModel.onEvent(FileDetailScreenUIEvent.Delete)
+            showDeleteDialog = false
         }
     }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets.statusBars,
+        snackbarHost = {
+            CustomSnackbarHost(snackbarHostState = snackbarHostState)
+        },
         topBar = {
             FileDetailTopBar(
                 onDownloadClick = {},
-                onActionClicked = {},
-                onBackClick = onBackClick
+                onActionClicked = { action: Action ->
+                    when (action) {
+                        Action.Rename ->  showRenameDialog = true
+                        Action.Move -> viewModel.onEvent(FileDetailScreenUIEvent.Move)
+                        Action.Copy -> viewModel.onEvent(FileDetailScreenUIEvent.Copy)
+                        Action.Delete -> showDeleteDialog = true
+                        else -> {}
+                    }
+                },
+                onBackClick = {
+                    viewModel.onEvent(FileDetailScreenUIEvent.GoBack)
+                }
             )
         }
     ) {

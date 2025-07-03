@@ -13,7 +13,10 @@ sealed interface FileScreenUIEvent {
     data class Move(val fileNode: FileNode): FileScreenUIEvent
     data class Copy(val fileNode: FileNode): FileScreenUIEvent
     data class Delete(val fileId: String): FileScreenUIEvent
+    data class CreateNewFolder(val folderName: String) : FileScreenUIEvent
+    data class CreateNewFile(val folderName: String) : FileScreenUIEvent
     data object RefreshData: FileScreenUIEvent
+    data object Search : FileScreenUIEvent
 }
 
 enum class SortType {

@@ -41,7 +41,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.ActionTy
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JetDriveModalBottomSheet(
+fun FileScreenBottomSheet(
     modifier: Modifier = Modifier,
     fileNode: FileNode,
     sheetState: SheetState,

@@ -1,5 +1,5 @@
 package com.niclauscott.jetdrive.features.landing.ui.state
 
-data class HomeScreenUiState(
+data class LandingScreenUiState(
     val isUnfinishedFileOperation: Boolean = false,
 )

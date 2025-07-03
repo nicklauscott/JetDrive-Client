@@ -7,14 +7,14 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.FileCopyMoveScreen
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.FileCopyMoveScreenViewModel
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.FileCopyMoveScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.FileCopyMoveScreenViewModel
 import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.FileDetailScreen
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.FileScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.FileDetailScreenViewModel
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.FileListScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.FileScreenViewModel
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CopyMoveScreen
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DetailScreen
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileListScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_search.FileSearchScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_search.FileSearchScreenViewModel
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -40,15 +40,15 @@ fun FileListNavigationRoot(
                         val viewModel: FileScreenViewModel = koinViewModel {
                             parametersOf(key.fileNode, backStack)
                         }
-                        FileScreen(viewModel = viewModel)
+                        FileListScreen(modifier = modifier, viewModel = viewModel)
                     }
                 }
                 is DetailScreen -> {
                     NavEntry(key = key) {
-                        FileDetailScreen(
-                            fileNode = key.fileNode,
-                            landingScreenViewModel = landingScreenViewModel
-                        ) { backStack.removeAt(backStack.lastIndex) }
+                        val viewModel: FileDetailScreenViewModel = koinViewModel {
+                            parametersOf(key.fileNode, backStack, landingScreenViewModel)
+                        }
+                        FileDetailScreen(viewModel = viewModel)
                     }
                 }
 
@@ -64,6 +64,15 @@ fun FileListNavigationRoot(
                             action = key.action,
                             viewModel = viewModel
                         )
+                    }
+                }
+
+                is SearchScreen -> {
+                    NavEntry(key = key) {
+                        val viewModel: FileSearchScreenViewModel = koinViewModel {
+                            parametersOf(backStack)
+                        }
+                        FileSearchScreen(viewModel = viewModel)
                     }
                 }
 

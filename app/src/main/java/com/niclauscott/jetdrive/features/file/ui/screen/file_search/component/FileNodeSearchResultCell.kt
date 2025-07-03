@@ -1,6 +1,5 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.file_list.component
+package com.niclauscott.jetdrive.features.file.ui.screen.file_search.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,11 +19,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
@@ -35,10 +30,9 @@ import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.domain.util.getFileIcon
 
 @Composable
-fun FileNodeCell(
+fun FileNodeSearchResultCell(
     modifier: Modifier = Modifier,
     fileNode: FileNode,
-    onMoreClick: () -> Unit,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -70,7 +64,7 @@ fun FileNodeCell(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier
-                    .weight(0.8f),
+                    .fillMaxWidth(),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.Top
                 ) {
@@ -92,19 +86,6 @@ fun FileNodeCell(
                         )
                     }
                 }
-
-                Box(
-                    modifier = Modifier.weight(0.2f),
-                    contentAlignment = Alignment.TopEnd) {
-                    IconButton(onClick = onMoreClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.more_vert_icon),
-                            contentDescription = getString(context, R.string.more_option),
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.inverseOnSurface
-                        )
-                    }
-                }
             }
         }
 
@@ -123,58 +104,4 @@ fun FileNodeCell(
         }
     }
 
-}
-
-@Composable
-fun TextButton(
-    modifier: Modifier = Modifier,
-    label: String,
-    texStyle: TextStyle = MaterialTheme.typography.bodyMedium,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(
-                vertical = 1.percentOfScreenHeight(),
-                horizontal = 2.percentOfScreenWidth()
-            )
-    ) {
-        Text(
-            label,
-            style = texStyle,
-            color = if (enabled) MaterialTheme.colorScheme.inverseOnSurface
-            else MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
-        )
-    }
-}
-
-@Composable
-fun TextButton(
-    modifier: Modifier = Modifier,
-    label: String,
-    enabled: Boolean,
-    texStyle: TextStyle = MaterialTheme.typography.bodyMedium,
-    backgroundColor: Color,
-    textColor: Color,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(backgroundColor)
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(
-                vertical = 1.percentOfScreenHeight(),
-                horizontal = 2.percentOfScreenWidth()
-            )
-    ) {
-        Text(
-            label,
-            style = texStyle,
-            color = textColor
-        )
-    }
 }

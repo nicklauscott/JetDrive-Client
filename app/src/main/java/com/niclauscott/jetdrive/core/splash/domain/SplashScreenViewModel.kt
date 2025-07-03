@@ -23,9 +23,9 @@ class SplashScreenViewModel(
         get() = _screen.value != null
 
     init {
-        _screen.value = LandingScreen // Remove later
+        //_screen.value = LandingScreen // Remove later
         //_screen.value = LoginScreen // Remove later
-        /* // Uncomment later
+        ///* // Uncomment later
         viewModelScope.launch {
             val response = authRepository.validate()
             _screen.value = when (response) {
@@ -34,7 +34,7 @@ class SplashScreenViewModel(
                 AuthValidationResponse.ValidationSuccessful -> LandingScreen
             }
         }
-         */
+         //*/
     }
 
 }

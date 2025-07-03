@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.copy_move
+package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move
 
 object CopyMoveViewModelRefreshRegistry {
     private val refreshMap = mutableListOf<String>()

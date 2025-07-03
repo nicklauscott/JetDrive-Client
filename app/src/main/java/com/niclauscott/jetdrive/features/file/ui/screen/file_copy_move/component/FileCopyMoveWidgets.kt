@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component
+package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.getString
@@ -125,7 +127,7 @@ fun CreateNewFolderDialog(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                getString(context, R.string.rename),
+                getString(context, R.string.create),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.inverseOnSurface
             )
@@ -160,6 +162,84 @@ fun CreateNewFolderDialog(
                     label = getString(context, R.string.create),
                     enabled = name.isNotBlank(),
                     onClick = { onCreateClick(name) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CreateNewTextFilDialog(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onCreateClick: (String) -> Unit
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    val context = LocalContext.current
+    val text = ".txt"
+    val textFieldValue = remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = text,
+                selection = TextRange(0)
+            )
+        )
+    }
+
+    focusRequester.requestFocus()
+    keyboardController?.show()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.inverseSurface)
+                .padding(
+                    vertical = 2.percentOfScreenHeight(),
+                    horizontal = 3.percentOfScreenWidth()
+                ),
+            verticalArrangement = Arrangement.spacedBy(2.percentOfScreenHeight()),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                getString(context, R.string.create),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.inverseOnSurface
+            )
+
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                value = textFieldValue.value,
+                textStyle = MaterialTheme.typography.bodyMedium,
+                onValueChange = { textFieldValue.value = it },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                )
+            )
+
+            Row(
+                modifier = modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    label = getString(context, R.string.cancel),
+                    enabled = true,
+                    onClick = onDismiss
+                )
+
+                TextButton(
+                    label = getString(context, R.string.create),
+                    enabled = textFieldValue.value.text.isNotBlank(),
+                    onClick = { onCreateClick(textFieldValue.value.text) }
                 )
             }
         }

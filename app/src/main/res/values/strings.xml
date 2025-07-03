@@ -28,5 +28,6 @@
     <string name="move">Move</string>
     <string name="copy">Copy</string>
     <string name="create">Create</string>
+    <string name="no_result">No result found</string>
 
 </resources>

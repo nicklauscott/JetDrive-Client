@@ -11,5 +11,8 @@ data class FileScreenUiState(
     val children: List<FileNode> = emptyList(),
 
     val sortType: SortType = SortType.Name,
-    val sortOrder: SortOrder = SortOrder.ASC
+    val sortOrder: SortOrder = SortOrder.ASC,
+
+    val activeFileOperation: Boolean = true,
+    val activeFileOperationProgress: Float = 0.2f
 )

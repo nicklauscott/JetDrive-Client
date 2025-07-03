@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.copy_move
+package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -42,11 +42,11 @@ import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component.CreateNewFolderDialog
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component.FileCopyMoveNodeCell
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.component.FileCopyMoveTopBar
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEffect
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEvent
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.FileCopyMoveNodeCell
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.FileCopyMoveTopBar
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIEffect
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.TextButton
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 

@@ -107,7 +107,10 @@ fun FileScreenTopBar(
                             text = searchText,
                             onClickCancel = onCancelSearch,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { onDone() })
+                            keyboardActions = KeyboardActions(onSearch = {
+                                keyboardController?.hide()
+                                onDone()
+                            })
                         ) { onSearchTextChange(it) }
                     }
                 }

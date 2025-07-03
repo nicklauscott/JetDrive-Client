@@ -7,15 +7,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.navigation3.runtime.NavBackStack
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileListScreen
-import com.niclauscott.jetdrive.features.landing.ui.state.HomeScreenUiState
+import com.niclauscott.jetdrive.features.file.ui.navigation.FileListScreen
+import com.niclauscott.jetdrive.features.landing.ui.state.LandingScreenUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class LandingScreenViewModel: ViewModel() {
 
-    private val _state: MutableState<HomeScreenUiState> = mutableStateOf(HomeScreenUiState())
-    val state: State<HomeScreenUiState> = _state
+    private val _state: MutableState<LandingScreenUiState> = mutableStateOf(LandingScreenUiState())
+    val state: State<LandingScreenUiState> = _state
 
     // Get latest data from database
     private val _activeFileOperation: MutableState<Boolean>

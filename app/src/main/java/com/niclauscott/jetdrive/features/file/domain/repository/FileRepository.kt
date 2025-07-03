@@ -8,7 +8,7 @@ interface FileRepository {
     suspend fun getRootFiles(useCache: Boolean): FileResponse<List<FileNode>>
     suspend fun search(searchQuery: String): FileResponse<List<FileNode>>
     suspend fun getChildren(
-        parentID: String, ifUpdatedSince: LocalDateTime?, useCache: Boolean
+        parentId: String, ifUpdatedSince: LocalDateTime?, useCache: Boolean
     ): FileResponse<List<FileNode>>
     suspend fun createFolder(name: String, parentId: String?): FileResponse<FileNode>
     suspend fun renameFileNode(fileId: String, newName: String): FileResponse<Unit>

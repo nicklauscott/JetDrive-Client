@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state
+package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state
 
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action

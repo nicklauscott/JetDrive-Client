@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.ui.screen.copy_move
+package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -9,10 +9,10 @@ import androidx.navigation3.runtime.NavBackStack
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.domain.repository.FileRepository
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEffect
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIEvent
-import com.niclauscott.jetdrive.features.file.ui.screen.copy_move.state.FileCopyMoveScreenUIState
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CopyMoveScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIEffect
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIEvent
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIState
+import com.niclauscott.jetdrive.features.file.ui.navigation.CopyMoveScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
@@ -38,8 +38,8 @@ class FileCopyMoveScreenViewModel(
     val effect: SharedFlow<FileCopyMoveScreenUIEffect> = _effect
 
     init {
-        landingScreenViewModel.hideBottomBars()
-        landingScreenViewModel.hideFab()
+        //landingScreenViewModel.hideBottomBars()
+        //landingScreenViewModel.hideFab()
         loadContent()
     }
 
@@ -56,8 +56,8 @@ class FileCopyMoveScreenViewModel(
             )
             FileCopyMoveScreenUIEvent.Cancel -> {
                 backStack.removeAll { it is CopyMoveScreen }
-                landingScreenViewModel.showFab()
-                landingScreenViewModel.showBottomBars()
+                //landingScreenViewModel.showFab()
+                //landingScreenViewModel.showBottomBars()
             }
             FileCopyMoveScreenUIEvent.RefreshData -> onAppear()
         }
@@ -84,8 +84,8 @@ class FileCopyMoveScreenViewModel(
                 // old folder
                 FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
                 backStack.removeAll { it is CopyMoveScreen }
-                landingScreenViewModel.showFab()
-                landingScreenViewModel.showBottomBars()
+                //landingScreenViewModel.showFab()
+                //landingScreenViewModel.showBottomBars()
             } else if (response is FileResponse.Failure) {
                 _effect.emit(FileCopyMoveScreenUIEffect.ShowSnackbar(response.message))
             }

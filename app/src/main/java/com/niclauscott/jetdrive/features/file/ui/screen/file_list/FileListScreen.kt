@@ -16,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -34,22 +35,28 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
+import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
-import com.niclauscott.jetdrive.core.util.TAG
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewTextFilDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DeleteDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileNodeCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenTopBar
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.JetDriveModalBottomSheet
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenBottomSheet
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.RenameDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.SortingAndOrderCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
+import com.niclauscott.jetdrive.features.landing.ui.components.FAB
+import com.niclauscott.jetdrive.features.landing.ui.components.LandingScreenBottomSheet
+import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FileScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
+fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
 
     val context = LocalContext.current
 
@@ -58,14 +65,30 @@ fun FileScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
     var searchText by rememberSaveable { mutableStateOf("") }
 
     var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
     var selectedFileNode by remember { mutableStateOf<FileNode?>(null) }
 
-    val sheetState = rememberModalBottomSheetState()
+    var showFileActionBottomSheet by remember { mutableStateOf(false) }
+    var showCreateFolderDialog by rememberSaveable { mutableStateOf(false) }
+    var showCreateTextFileDialog by rememberSaveable { mutableStateOf(false) }
 
     var showRenameDialog by rememberSaveable { mutableStateOf<FileNode?>(null) }
     var showDeleteDialog by rememberSaveable { mutableStateOf<String?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(Unit) { viewModel.onEvent(FileScreenUIEvent.RefreshData) }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is FileScreenUIEffect.ShowSnackBar -> {
+                    Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
+                    snackbarHostState.showSnackbar(effect.message)
+                }
+            }
+        }
+    }
 
     if (showRenameDialog != null) {
         RenameDialog(
@@ -88,16 +111,48 @@ fun FileScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
         }
     }
 
+    if (showCreateFolderDialog) {
+        CreateNewFolderDialog(
+            onDismiss = { showCreateFolderDialog = false }
+        ) { folderName ->
+            viewModel.onEvent(FileScreenUIEvent.CreateNewFolder(folderName))
+            showCreateFolderDialog = false
+        }
+    }
+
+    if (showCreateTextFileDialog) {
+        CreateNewTextFilDialog(
+            onDismiss = { showCreateTextFileDialog = false }
+        ) { fileName ->
+            viewModel.onEvent(FileScreenUIEvent.CreateNewFile(fileName))
+            showCreateTextFileDialog = false
+        }
+    }
+
     val state = viewModel.state
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
+        floatingActionButton = {
+            FAB(
+                showActiveFileOperationFAB = state.value.activeFileOperation,
+                progress = state.value.activeFileOperationProgress,
+                onClickActiveFileOperationFAB = {},
+                showFileOperationFAB = true
+            ) { showFileActionBottomSheet = true }
+        },
+        snackbarHost = {
+            CustomSnackbarHost(modifier = modifier,snackbarHostState = snackbarHostState)
+        },
         topBar = {
             FileScreenTopBar(
                 title = viewModel.state.value.title.take(20),
                 isSearch = isSearching,
                 isRoot = viewModel.state.value.parentId == null,
-                onSearchClick = { isSearching = true },
+                onSearchClick = {
+                    viewModel.onEvent(FileScreenUIEvent.Search)
+                    isSearching = true
+                },
                 onDone = {
                     keyboardController?.hide();
                     searchText = ""
@@ -120,8 +175,22 @@ fun FileScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
         }
     ) { paddingValues ->
 
+        if (showFileActionBottomSheet) {
+            LandingScreenBottomSheet(
+                modifier = Modifier,
+                sheetState = sheetState,
+                onDismiss = { showFileActionBottomSheet = false }
+            ) { fileAction ->
+                when (fileAction) {
+                    FileActions.CreateFolder -> showCreateFolderDialog = true
+                    FileActions.UploadFile -> {}
+                }
+                showFileActionBottomSheet = false
+            }
+        }
+
         if (showBottomSheet && selectedFileNode != null) {
-            JetDriveModalBottomSheet(
+            FileScreenBottomSheet(
                 sheetState = sheetState,
                 fileNode = selectedFileNode!!,
                 onDismiss = { showBottomSheet = false }
