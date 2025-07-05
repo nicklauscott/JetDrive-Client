@@ -1,6 +1,7 @@
 package com.niclauscott.jetdrive.features.auth.google
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.ContextCompat.getString
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -12,6 +13,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
 import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
+import com.niclauscott.jetdrive.core.util.TAG
 import com.niclauscott.jetdrive.features.auth.domain.exception.OAuthClientException
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.repository.OAuthClient
@@ -28,10 +30,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.flow.first
 
 class GoogleAuth(
     private val baseUrl: String, private val client: HttpClient,
-    private val dataStore: DataStore<UserPreferences>): OAuthClient {
+    private val dataStore: DataStore<UserPreferences>
+): OAuthClient {
 
     private val request: (Context) -> GetCredentialRequest = { context ->
         GetCredentialRequest(
@@ -95,9 +99,10 @@ class GoogleAuth(
                 val message = response.bodyAsText()
                 return AuthResponse.LoginFailed(message)
             }
-
             val loginDTO = response.body<TokenPairResponseDTO>()
             dataStore.updateData { UserPreferences(loginDTO.access, loginDTO.refresh) }
+            Log.d(TAG("GoogleAuth"), "loginWithGoodId: loginDTO: $loginDTO")
+            Log.d(TAG("GoogleAuth"), "loginWithGoodId: from datastore: ${dataStore.data.first()}")
             AuthResponse.LoginSuccessful
         } catch (ex: ResponseException) {
             val errorMessage = when (val statusCode = ex.response.status) {

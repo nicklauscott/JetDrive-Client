@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.ktor.cio)
     implementation(libs.ktor.android)
     implementation(libs.ktor.auth)
+    implementation(libs.ktor.logging)
     implementation(libs.ktor.content.negotiation)
     implementation(libs.ktor.serialization.json)
 

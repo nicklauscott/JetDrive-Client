@@ -2,8 +2,8 @@ package com.niclauscott.jetdrive.core
 
 import android.app.Application
 import com.niclauscott.jetdrive.core.cache.di.inMemoryCacheModule
+import com.niclauscott.jetdrive.core.database.di.databaseModule
 import com.niclauscott.jetdrive.core.datastore.di.dataStoreModule
-import com.niclauscott.jetdrive.core.di.appModule
 import com.niclauscott.jetdrive.core.http_client.di.httpClientModule
 import com.niclauscott.jetdrive.features.auth.di.authModule
 import com.niclauscott.jetdrive.core.splash.di.splashModule
@@ -23,9 +23,9 @@ class JetDriveApp: Application(), KoinStartup {
         androidLogger()
         androidContext(this@JetDriveApp)
         modules(
-            appModule, dataStoreModule, httpClientModule,
-            splashModule, authModule, googleAuthModule,
-            landingModule, fileModule, inMemoryCacheModule
+            dataStoreModule, httpClientModule, databaseModule,
+            inMemoryCacheModule, splashModule, authModule,
+            googleAuthModule, landingModule, fileModule,
         )
     }
 }

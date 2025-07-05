@@ -54,6 +54,7 @@ ktor-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktorV
 ktor-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktorVersion" }
 ktor-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktorVersion" }
 ktor-auth = { group = "io.ktor", name = "ktor-client-auth", version.ref = "ktorVersion" }
+ktor-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktorVersion" }
 ktor-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktorVersion" }
 ktor-serialization-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }
 
