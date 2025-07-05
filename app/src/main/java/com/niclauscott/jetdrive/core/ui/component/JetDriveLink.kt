@@ -26,7 +26,7 @@ fun JetDriveLink(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.90f else 1f,
         label = "ScaleAnimation"
     )
 
@@ -36,7 +36,7 @@ fun JetDriveLink(
             .clickable(
                 onClick = onClick,
                 interactionSource = interactionSource,
-                indication = ripple(bounded = true)
+                indication = null
             )
             .scale(scale),
         style = MaterialTheme.typography.titleSmall,

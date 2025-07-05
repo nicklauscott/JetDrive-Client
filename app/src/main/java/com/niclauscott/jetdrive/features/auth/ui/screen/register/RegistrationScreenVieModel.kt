@@ -32,7 +32,7 @@ class RegistrationScreenVieModel(
         when (event) {
             RegisterScreenUIEvent.Login -> {
                 backStack.clear()
-                backStack.add(LoginScreen)
+                backStack.add(LoginScreen(null))
             }
             is RegisterScreenUIEvent.RegisterScreen -> register(event.request)
         }
@@ -46,7 +46,7 @@ class RegistrationScreenVieModel(
                 _effect.emit(RegisterScreenUIEffect.ShowSnackbar("Registration successful"))
                 _state.value = state.value.copy(isRegistering = false, successful = true)
                 backStack.clear()
-                backStack.add(LoginScreen)
+                backStack.add(LoginScreen(request.email))
             } else if (response is AuthResponse.RegistrationFailure) {
                 response.message?.let { _effect.emit(RegisterScreenUIEffect.ShowSnackbar(it)) }
                 _state.value = state.value.copy(isRegistering = false, errorMessage = response.message)

@@ -41,7 +41,7 @@ fun NavigationRoot(
                     is LoginScreen -> {
                         NavEntry(key = key) {
                             val viewModel: LoginScreenVieModel = koinViewModel { parametersOf(backStack) }
-                            LoginScreen(viewModel = viewModel)
+                            LoginScreen(email = key.email, viewModel = viewModel)
                         }
                     }
 

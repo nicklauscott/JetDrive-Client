@@ -147,30 +147,10 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
         topBar = {
             FileScreenTopBar(
                 title = viewModel.state.value.title.take(20),
-                isSearch = isSearching,
                 isRoot = viewModel.state.value.parentId == null,
-                onSearchClick = {
-                    viewModel.onEvent(FileScreenUIEvent.Search)
-                    isSearching = true
-                },
-                onDone = {
-                    keyboardController?.hide();
-                    searchText = ""
-                },
-                searchText = searchText,
-                onCancelSearch = {
-                    isSearching = false;
-                    searchText = ""
-                    // Clear search result
-
-                },
-                onSearchTextChange = { newText ->
-                    searchText = newText
-                    // Perform search
-                },
-                onBackClick = {
-                    viewModel.onEvent(FileScreenUIEvent.GoBack)
-                }
+                onSearchClick = { viewModel.onEvent(FileScreenUIEvent.Search) },
+                onMoreClick = {},
+                onBackClick = { viewModel.onEvent(FileScreenUIEvent.GoBack) }
             )
         }
     ) { paddingValues ->

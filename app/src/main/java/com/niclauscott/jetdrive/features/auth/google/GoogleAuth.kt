@@ -1,12 +1,10 @@
 package com.niclauscott.jetdrive.features.auth.google
 
 import android.content.Context
-import android.util.Log
 import androidx.core.content.ContextCompat.getString
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
 import androidx.datastore.core.DataStore
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -14,7 +12,6 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
 import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
-import com.niclauscott.jetdrive.core.util.TAG
 import com.niclauscott.jetdrive.features.auth.domain.exception.OAuthClientException
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.repository.OAuthClient
@@ -52,23 +49,10 @@ class GoogleAuth(
     ): AuthResponse {
         val idToken = try {
              getGoogleId(context)
-        } catch (ex: GetCredentialException) {
-            when (ex) {
-                is GetCredentialCancellationException -> {
-                    Log.d(TAG("GoogleAuth"), "User canceled the sign-in prompt.")
-                    return AuthResponse.LoginFailed()
-                }
-                is GetCredentialProviderConfigurationException -> {
-                    Log.e(TAG("GoogleAuth"), "Provider config error: ${ex.message}")
-                    return AuthResponse.LoginFailed()
-                }
-                else -> {
-                    Log.e(TAG("GoogleAuth"), "Unexpected sign-in error: ${ex.message}")
-                    return AuthResponse.LoginFailed()
-                }
-            }
+        } catch (ex: OAuthClientException) {
+            return AuthResponse.LoginFailed(ex.message)
         } catch (ex: Exception) {
-            return AuthResponse.LoginFailed("Google SignIn Failed. Check your internet connection") //  network error
+            return AuthResponse.LoginFailed("Google SignIn Failed. Check your internet connection")
         }
 
         jetDriveLogin()
@@ -82,7 +66,17 @@ class GoogleAuth(
             val googleCredential = result.credential as? GoogleIdTokenCredential
             googleCredential?.idToken ?: throw OAuthClientException("Error login in with google: ")
         } catch (ex: Exception) {
-            throw OAuthClientException("Error login in with google: ${ex.message}")
+            when (ex) {
+                is GetCredentialCancellationException -> {
+                    throw OAuthClientException(null)
+                }
+                is GetCredentialProviderConfigurationException -> {
+                    throw OAuthClientException(null)
+                }
+                else -> {
+                    throw OAuthClientException("Check your internet connection")
+                }
+            }
         }
     }
 

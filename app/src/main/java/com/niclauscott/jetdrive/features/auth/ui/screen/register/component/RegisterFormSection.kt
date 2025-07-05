@@ -1,5 +1,6 @@
 package com.niclauscott.jetdrive.features.auth.ui.screen.register.component
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import com.niclauscott.jetdrive.features.auth.domain.model.dto.RegisterRequestDT
 fun RegisterFormSection(
     modifier: Modifier = Modifier,
     isLoginIn: Boolean,
+    hideButtonLink: Boolean,
     onLoginClicked: () -> Unit,
     onRegisterClicked: (RegisterRequestDTO) -> Unit,
 ) {
@@ -40,7 +42,8 @@ fun RegisterFormSection(
     var confirmPasswordError by remember { mutableStateOf(false) }
 
     Column(
-        modifier = modifier
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         JetDriveTextField(
             text = firstNameText,
@@ -134,11 +137,14 @@ fun RegisterFormSection(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        JetDriveLink(
-            text = "Already have an account?",
-            onClick = onLoginClicked,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-        )
+
+        AnimatedVisibility(visible = !hideButtonLink) {
+            JetDriveLink(
+                text = "Already have an account?",
+                onClick = onLoginClicked,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+            )
+        }
     }
 }

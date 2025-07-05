@@ -21,10 +21,11 @@ import com.niclauscott.jetdrive.core.ui.component.JetDriveTextField
 fun LoginFormSection(
     modifier: Modifier = Modifier,
     isLoginIn: Boolean,
+    email: String? = null,
     onRegisterClicked: () -> Unit,
     onLoginClicked: (String, String) -> Unit,
 ) {
-    var emailText by remember { mutableStateOf("") }
+    var emailText by remember { mutableStateOf(email ?: "") }
     var passwordText by remember { mutableStateOf("") }
 
     val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{9,}\$")

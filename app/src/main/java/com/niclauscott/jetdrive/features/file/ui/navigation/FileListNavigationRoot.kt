@@ -70,7 +70,7 @@ fun FileListNavigationRoot(
                 is SearchScreen -> {
                     NavEntry(key = key) {
                         val viewModel: FileSearchScreenViewModel = koinViewModel {
-                            parametersOf(backStack)
+                            parametersOf(backStack, landingScreenViewModel)
                         }
                         FileSearchScreen(viewModel = viewModel)
                     }

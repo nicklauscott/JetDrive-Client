@@ -34,7 +34,11 @@ import com.niclauscott.jetdrive.features.auth.ui.screen.login.state.LoginScreenU
 import com.niclauscott.jetdrive.features.auth.ui.screen.login.state.LoginScreenUIEvent
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier,  viewModel: LoginScreenVieModel) {
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    email: String? = null,
+    viewModel: LoginScreenVieModel
+) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -86,6 +90,7 @@ fun LoginScreen(modifier: Modifier = Modifier,  viewModel: LoginScreenVieModel) 
                     LoginFormSection(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState()),
+                        email = email,
                         isLoginIn = viewModel.state.value.isLoginIn,
                         onRegisterClicked = {
                             viewModel.onEvent(LoginScreenUIEvent.Register)

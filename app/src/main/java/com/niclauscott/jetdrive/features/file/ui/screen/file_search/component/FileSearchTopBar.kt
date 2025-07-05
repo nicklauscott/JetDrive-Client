@@ -3,6 +3,7 @@ package com.niclauscott.jetdrive.features.file.ui.screen.file_search.component
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.niclauscott.jetdrive.core.ui.component.JetDriveSearchField
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
+import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 
 @Composable
 fun FileSearchTopBar(
@@ -30,7 +32,8 @@ fun FileSearchTopBar(
 
     Card(
         modifier = modifier.fillMaxWidth()
-            .height(8.percentOfScreenHeight()),
+            .height(8.percentOfScreenHeight())
+            .padding(vertical = 2.percentOfScreenWidth()),
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         shape = RectangleShape,
         colors = CardDefaults.cardColors(

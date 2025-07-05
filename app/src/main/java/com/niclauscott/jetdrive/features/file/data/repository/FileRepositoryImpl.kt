@@ -73,7 +73,8 @@ class FileRepositoryImpl(
         } catch (ex: ConnectTimeoutException) {
             FileResponse.Failure("Connection timeout. Try again")
         } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
+            //FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
+            FileResponse.Failure("${ex.message}")
         }
     }
 
@@ -182,7 +183,8 @@ class FileRepositoryImpl(
        } catch (ex: ConnectTimeoutException) {
            FileResponse.Failure("Connection timeout. Try again")
        } catch (ex: Exception) {
-           FileResponse.Failure("Newtwork. Check your error. internet connection")
+           //FileResponse.Failure("Newtwork. Check your error. internet connection")
+           FileResponse.Failure("${ex.message}")
        }
     }
 

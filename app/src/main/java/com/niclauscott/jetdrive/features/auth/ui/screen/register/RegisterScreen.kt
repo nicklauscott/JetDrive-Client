@@ -1,6 +1,7 @@
 package com.niclauscott.jetdrive.features.auth.ui.screen.register
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -23,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.DeviceConfiguration
@@ -37,6 +41,8 @@ fun RegisterScreen(
     viewModel: RegistrationScreenVieModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -74,19 +80,24 @@ fun RegisterScreen(
         when (deviceConfiguration) {
             DeviceConfiguration.MOBILE_PORTRAIT -> {
                 Column(
-                    modifier = rootModifier.padding(top = 32.dp),
+                    modifier = rootModifier.padding(top = if (!imeVisible) 32.dp else 16.dp),
                     verticalArrangement = Arrangement.spacedBy(32.dp),
                 ) {
-                    AuthHeaderSection(
-                        modifier = Modifier.fillMaxWidth(),
-                        title = "Sign Up",
-                        description = "Create a Jet Drive account."
-                    )
+                    AnimatedVisibility(visible = !imeVisible) {
+                        AuthHeaderSection(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = "Sign Up",
+                            description = "Create a Jet Drive account."
+                        )
+                    }
 
                     RegisterFormSection(
                         modifier = Modifier
-                            .verticalScroll(rememberScrollState()),
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .imePadding(),
                         isLoginIn = viewModel.state.value.isRegistering,
+                        hideButtonLink = imeVisible,
                         onLoginClicked = { viewModel.onEvent(RegisterScreenUIEvent.Login) }
                     ) { registerRequest ->
                         viewModel.onEvent(RegisterScreenUIEvent.RegisterScreen(registerRequest))

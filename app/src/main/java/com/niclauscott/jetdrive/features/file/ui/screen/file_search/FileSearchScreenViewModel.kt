@@ -11,19 +11,28 @@ import com.niclauscott.jetdrive.features.file.domain.repository.FileRepository
 import com.niclauscott.jetdrive.features.file.ui.navigation.FileListScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_search.state.FileSearchScreenUiEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_search.state.FileSearchScreenUiState
+import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import kotlinx.coroutines.launch
 
 class FileSearchScreenViewModel(
     private val backStack: NavBackStack,
+    private val landingScreenViewModel: LandingScreenViewModel,
     private val fileRepository: FileRepository
 ): ViewModel() {
 
     private val _state: MutableState<FileSearchScreenUiState> = mutableStateOf(FileSearchScreenUiState())
     val state: State<FileSearchScreenUiState> = _state
 
+    init {
+        landingScreenViewModel.hideBottomBars()
+    }
+
     fun onEvent(event: FileSearchScreenUiEvent) {
         when (event) {
-            FileSearchScreenUiEvent.GoBack -> backStack.removeAt(backStack.lastIndex)
+            FileSearchScreenUiEvent.GoBack -> {
+                landingScreenViewModel.showBottomBars()
+                backStack.removeAt(backStack.lastIndex)
+            }
             is FileSearchScreenUiEvent.OpenFileNode -> backStack.add(FileListScreen(event.fileNode))
             is FileSearchScreenUiEvent.Search -> search(event.query)
         }

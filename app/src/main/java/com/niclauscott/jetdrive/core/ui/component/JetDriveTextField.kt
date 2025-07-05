@@ -158,12 +158,13 @@ fun JetDriveSearchField(
         ),
         placeholder = {
             Text(
-                text = hint, style = MaterialTheme.typography.bodyLarge,
+                text = hint, style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
         },
         maxLines = 1,
-        textStyle = MaterialTheme.typography.bodyLarge,
+        textStyle = MaterialTheme.typography.bodyMedium,
         shape = RoundedCornerShape(10.dp),
         trailingIcon = {
             Box(contentAlignment = Alignment.Center) {

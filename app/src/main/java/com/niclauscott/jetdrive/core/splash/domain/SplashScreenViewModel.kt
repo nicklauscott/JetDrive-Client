@@ -29,8 +29,8 @@ class SplashScreenViewModel(
         viewModelScope.launch {
             val response = authRepository.validate()
             _screen.value = when (response) {
-                AuthValidationResponse.NetworkFailed -> LoginScreen
-                AuthValidationResponse.ValidationFailed -> LoginScreen
+                AuthValidationResponse.NetworkFailed -> LoginScreen(null)
+                AuthValidationResponse.ValidationFailed -> LoginScreen(null)
                 AuthValidationResponse.ValidationSuccessful -> LandingScreen
             }
         }
