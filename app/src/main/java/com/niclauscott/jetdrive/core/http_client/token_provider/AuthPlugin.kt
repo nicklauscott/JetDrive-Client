@@ -13,18 +13,18 @@ import io.ktor.util.AttributeKey
 
 object AuthPlugin : HttpClientPlugin<AuthPlugin.Config, AuthPlugin> {
     class Config {
-        lateinit var tokenStorage: TokenStorage
+        lateinit var tokenHolder: TokenHolder
         lateinit var tokenRefresher: TokenRefresher
     }
 
-    private lateinit var tokenStorage: TokenStorage
+    private lateinit var tokenStorage: TokenHolder
     private lateinit var tokenRefresher: TokenRefresher
 
     override val key: AttributeKey<AuthPlugin> = AttributeKey("AuthPlugin")
 
     override fun prepare(block: Config.() -> Unit): AuthPlugin {
         val config = Config().apply(block)
-        tokenStorage = config.tokenStorage
+        tokenStorage = config.tokenHolder
         tokenRefresher = config.tokenRefresher
         return this
     }
@@ -59,7 +59,7 @@ object AuthPlugin : HttpClientPlugin<AuthPlugin.Config, AuthPlugin> {
 
                         proceedWith(scope.request(retryRequest))
                     } else {
-                        tokenStorage.clearTokens()
+                        tokenStorage
                         throw e
                     }
                 } else {

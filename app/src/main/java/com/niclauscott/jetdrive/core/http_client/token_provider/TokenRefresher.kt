@@ -5,7 +5,6 @@ import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.headers
-import io.ktor.client.request.post
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -14,11 +13,13 @@ import io.ktor.http.HttpMethod
 
 class TokenRefresher(
     private val tokenStorage: TokenStorage,
+    private val tokenHolder: TokenHolder,
     private val baseUrl: String,
     private val client: HttpClient
 ) {
+
     suspend fun refreshAccessToken(): Boolean {
-        val refreshToken = tokenStorage.getRefreshToken() ?: return false
+        val refreshToken = tokenHolder.getRefreshToken() ?: return false
 
         return try {
             val response = client.request("$baseUrl/auth/refresh") {

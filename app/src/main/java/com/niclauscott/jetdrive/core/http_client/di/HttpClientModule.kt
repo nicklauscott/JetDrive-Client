@@ -5,6 +5,7 @@ import com.niclauscott.jetdrive.core.datastore.UserPreferences
 import com.niclauscott.jetdrive.core.http_client.model.RefreshRequestDTO
 import com.niclauscott.jetdrive.core.http_client.token_provider.AuthPlugin
 import com.niclauscott.jetdrive.core.http_client.token_provider.DataStoreTokenStorage
+import com.niclauscott.jetdrive.core.http_client.token_provider.TokenHolder
 import com.niclauscott.jetdrive.core.http_client.token_provider.TokenRefresher
 import com.niclauscott.jetdrive.core.http_client.token_provider.TokenStorage
 import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
@@ -28,6 +29,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -49,7 +53,21 @@ val httpClientModule = module {
 
     single<TokenStorage> { DataStoreTokenStorage(get()) }
 
-    single { TokenRefresher(get(), get(), HttpClient(Android)) }
+    single {
+        TokenHolder(
+            tokenStorage = get(),
+            coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        )
+    }
+
+    single {
+        TokenRefresher(
+            tokenStorage = get(),
+            tokenHolder = get(),
+            baseUrl = get(),
+            client = HttpClient(Android)
+        )
+    }
 
     single {
         HttpClient(Android) {
@@ -61,7 +79,7 @@ val httpClientModule = module {
             }
 
             install(AuthPlugin) {
-                tokenStorage = get()
+                tokenHolder = get()
                 tokenRefresher = get()
             }
 
