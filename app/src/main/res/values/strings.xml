@@ -29,5 +29,28 @@
     <string name="copy">Copy</string>
     <string name="create">Create</string>
     <string name="no_result">No result found</string>
+    <string name="storage_overview">Storage Overview</string>
+    <string name="storage_used">Storage Used</string>
+    <string name="most_common_type">Most Common Type</string>
+    <string name="last_upload">Last Upload</string>
+    <string name="smallest_file">Smallest File</string>
+    <string name="folders">Folders</string>
+    <string name="average_size">Average Size</string>
+    <string name="largest_file">Largest File</string>
+    <string name="recent_files">Recent Files</string>
+    <string name="copy_file">Copy</string>
+    <string name="move_file">Move</string>
+    <string name="close">Close</string>
+    <string name="enter_new_name">Enter a file name</string>
+    <string name="file_name">Name</string>
+    <string name="renaming">...</string>
+    <string name="deleting">...</string>
+    <string name="create_folder">Create Folder</string>
+    <string name="total_storage">Total storage</string>
+    <string name="profile_picture">Profile picture</string>
+    <string name="edit_profile">Edit profile</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="update">Update</string>
 
 </resources>

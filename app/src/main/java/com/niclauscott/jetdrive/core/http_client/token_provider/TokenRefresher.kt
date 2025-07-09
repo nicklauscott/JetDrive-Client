@@ -1,7 +1,7 @@
 package com.niclauscott.jetdrive.core.http_client.token_provider
 
 import com.niclauscott.jetdrive.core.http_client.model.RefreshRequestDTO
-import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
+import com.niclauscott.jetdrive.core.domain.dto.TokenPairResponseDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.headers

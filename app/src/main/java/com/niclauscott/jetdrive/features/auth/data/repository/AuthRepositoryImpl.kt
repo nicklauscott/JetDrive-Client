@@ -3,8 +3,8 @@ package com.niclauscott.jetdrive.features.auth.data.repository
 import android.util.Log
 import androidx.datastore.core.DataStore
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
-import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
-import com.niclauscott.jetdrive.core.util.TAG
+import com.niclauscott.jetdrive.core.domain.dto.TokenPairResponseDTO
+import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.LoginRequestDTO
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.RegisterRequestDTO

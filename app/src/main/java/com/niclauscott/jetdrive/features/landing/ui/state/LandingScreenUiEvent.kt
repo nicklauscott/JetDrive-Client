@@ -10,6 +10,6 @@ sealed interface LandingScreenUiEvent {
 
 enum class FileActions(val description: String, val icon: Int) {
     CreateFolder("Create folder", R.drawable.create_folder_icon),
-    //CreateTextFile("Create text file", R.drawable.create_folder_icon),
+    // CreateTextFile("Create text file", R.drawable.create_folder_icon),
     UploadFile("Upload file", R.drawable.file_upload_icon)
 }

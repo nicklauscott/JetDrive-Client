@@ -1,12 +1,8 @@
 package com.niclauscott.jetdrive.features.landing.ui
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -26,8 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.niclauscott.jetdrive.features.landing.ui.components.BottomNavigationBar
-import com.niclauscott.jetdrive.features.landing.ui.components.FAB
-import com.niclauscott.jetdrive.features.landing.ui.components.LandingScreenBottomSheet
+import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
 import com.niclauscott.jetdrive.features.landing.ui.navigation.FileScreen
 import com.niclauscott.jetdrive.features.landing.ui.navigation.HomeScreen
 import com.niclauscott.jetdrive.features.landing.ui.navigation.LandingScreenNavigationRoot
@@ -38,9 +33,7 @@ import com.niclauscott.jetdrive.features.landing.ui.navigation.ProfileScreen
 fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewModel) {
 
     val backStack = rememberNavBackStack(HomeScreen)
-    var showFileActionFAB by remember { mutableStateOf(true) }
     val showBottomBar by viewModel.showBottomBar.collectAsState()
-    val showFab by viewModel.showFab.collectAsState()
     var currentScreenIndex by remember { mutableIntStateOf(0) }
 
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -50,30 +43,6 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        floatingActionButton = {
-            AnimatedContent(showFab) { target ->
-                if (target) {
-                    AnimatedVisibility(
-                        visible = showBottomBar,
-                        enter = scaleIn(
-                            initialScale = 0.8f,
-                            animationSpec = tween(durationMillis = 300)
-                        ) + fadeIn(animationSpec = tween(durationMillis = 300)),
-                        exit = scaleOut(
-                            targetScale = 0.8f,
-                            animationSpec = tween(durationMillis = 300)
-                        ) + fadeOut(animationSpec = tween(durationMillis = 300))
-                    ) {
-                        FAB(
-                            showActiveFileOperationFAB = viewModel.activeFileOperation.value,
-                            progress = viewModel.activeFileOperationProgress.value,
-                            onClickActiveFileOperationFAB = {},
-                            showFileOperationFAB = showFileActionFAB
-                        ) { showBottomSheet = true }
-                    }
-                }
-            }
-        },
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -84,21 +53,16 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
                     when (selectedScreen) {
                         0 -> {
                             currentScreenIndex = 0
-                            viewModel.showFab()
-                            showFileActionFAB = true
                             backStack.clear()
                             backStack.add(HomeScreen)
                         }
                         1 -> {
                             currentScreenIndex = 1
-                            viewModel.hideFab()
                             backStack.clear()
                             backStack.add(FileScreen)
                         }
                         2 -> {
                             currentScreenIndex = 2
-                            viewModel.showFab()
-                            showFileActionFAB = false
                             backStack.clear()
                             backStack.add(ProfileScreen)
                         }
@@ -110,7 +74,7 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
         val innerModifier = Modifier.fillMaxSize().padding(paddingValues)
 
         if (showBottomSheet) {
-            LandingScreenBottomSheet(
+            ActionsBottomSheet(
                 modifier = Modifier,
                 sheetState = sheetState,
                 onDismiss = { showBottomSheet = false }
@@ -123,7 +87,7 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
         LandingScreenNavigationRoot(
             modifier = innerModifier,
             backStack = backStack,
-            viewModel = viewModel
+            landingScreenViewModel = viewModel
         )
     }
 }

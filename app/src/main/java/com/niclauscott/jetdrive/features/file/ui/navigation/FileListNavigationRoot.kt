@@ -38,7 +38,7 @@ fun FileListNavigationRoot(
                 is FileListScreen -> {
                     NavEntry(key = key) {
                         val viewModel: FileScreenViewModel = koinViewModel {
-                            parametersOf(key.fileNode, backStack)
+                            parametersOf(key.fileNode, landingScreenViewModel, backStack)
                         }
                         FileListScreen(modifier = modifier, viewModel = viewModel)
                     }
@@ -48,7 +48,7 @@ fun FileListNavigationRoot(
                         val viewModel: FileDetailScreenViewModel = koinViewModel {
                             parametersOf(key.fileNode, backStack, landingScreenViewModel)
                         }
-                        FileDetailScreen(viewModel = viewModel)
+                        FileDetailScreen(landingScreenViewModel = landingScreenViewModel,viewModel = viewModel)
                     }
                 }
 
@@ -56,14 +56,11 @@ fun FileListNavigationRoot(
                     NavEntry(key = key) {
                         val viewModel: FileCopyMoveScreenViewModel = koinViewModel {
                             parametersOf(
-                                key.fileNode, key.folderId, key.folderName, key.action, backStack,
-                                landingScreenViewModel
+                                key.fileNode, key.folderId, key.folderName, key.action,
+                                landingScreenViewModel, backStack
                             )
                         }
-                        FileCopyMoveScreen(
-                            action = key.action,
-                            viewModel = viewModel
-                        )
+                        FileCopyMoveScreen(action = key.action, viewModel = viewModel)
                     }
                 }
 

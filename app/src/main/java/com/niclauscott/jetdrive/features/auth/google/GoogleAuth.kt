@@ -12,8 +12,8 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
-import com.niclauscott.jetdrive.core.model.dto.TokenPairResponseDTO
-import com.niclauscott.jetdrive.core.util.TAG
+import com.niclauscott.jetdrive.core.domain.dto.TokenPairResponseDTO
+import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.features.auth.domain.exception.OAuthClientException
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.repository.OAuthClient

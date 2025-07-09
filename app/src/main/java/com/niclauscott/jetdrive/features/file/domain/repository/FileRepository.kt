@@ -2,6 +2,7 @@ package com.niclauscott.jetdrive.features.file.domain.repository
 
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDateTime
 
 interface FileRepository {
@@ -15,4 +16,5 @@ interface FileRepository {
     suspend fun copyFileNode(fileId: String, parentId: String?): FileResponse<FileNode>
     suspend fun moveFileNode(fileId: String, newParentId: String?): FileResponse<FileNode>
     suspend fun deleteFileNode(fileId: String): FileResponse<Unit>
+    fun getAllActiveTransferProgress(): Flow<Float>
 }

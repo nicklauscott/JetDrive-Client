@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
+import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewTextFilDialog
@@ -51,7 +53,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScre
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
 import com.niclauscott.jetdrive.features.landing.ui.components.FAB
-import com.niclauscott.jetdrive.features.landing.ui.components.LandingScreenBottomSheet
+import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
 import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,9 +62,7 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
 
     val context = LocalContext.current
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-    var isSearching by rememberSaveable { mutableStateOf(false) }
-    var searchText by rememberSaveable { mutableStateOf("") }
+    val activeTransfer by viewModel.activeTransfer.collectAsState()
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -135,8 +135,8 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
         modifier = modifier.fillMaxSize(),
         floatingActionButton = {
             FAB(
-                showActiveFileOperationFAB = state.value.activeFileOperation,
-                progress = state.value.activeFileOperationProgress,
+                showActiveFileOperationFAB = activeTransfer > 0f,
+                progress = activeTransfer,
                 onClickActiveFileOperationFAB = {},
                 showFileOperationFAB = true
             ) { showFileActionBottomSheet = true }
@@ -156,7 +156,7 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
     ) { paddingValues ->
 
         if (showFileActionBottomSheet) {
-            LandingScreenBottomSheet(
+            ActionsBottomSheet(
                 modifier = Modifier,
                 sheetState = sheetState,
                 onDismiss = { showFileActionBottomSheet = false }
@@ -264,7 +264,8 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(top = paddingValues.calculateTopPadding())
+                        .padding(horizontal = 2.percentOfScreenWidth())
                 ) {
 
                     item {
@@ -293,6 +294,8 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                             selectedFileNode = it
                         }) { viewModel.onEvent(FileScreenUIEvent.OpenFileNode(it)) }
                     }
+
+                    item { Box(modifier = Modifier.padding(bottom = 1.percentOfScreenHeight())) }
                 }
             }
         }

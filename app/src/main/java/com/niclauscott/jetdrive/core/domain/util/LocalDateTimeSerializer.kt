@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.core.model.util
+package com.niclauscott.jetdrive.core.domain.util
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

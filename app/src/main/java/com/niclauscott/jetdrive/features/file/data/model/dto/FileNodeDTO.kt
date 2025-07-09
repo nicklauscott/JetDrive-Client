@@ -1,6 +1,6 @@
 package com.niclauscott.jetdrive.features.file.data.model.dto
 
-import com.niclauscott.jetdrive.core.model.util.LocalDateTimeSerializer
+import com.niclauscott.jetdrive.core.domain.util.LocalDateTimeSerializer
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 

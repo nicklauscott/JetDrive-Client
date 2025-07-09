@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,10 +46,12 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.state.FileDe
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DeleteDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.RenameDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
+import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 
 @Composable
 fun FileDetailScreen(
     modifier: Modifier = Modifier,
+    landingScreenViewModel: LandingScreenViewModel,
     viewModel: FileDetailScreenViewModel
 ) {
     val context = LocalContext.current
@@ -68,6 +71,10 @@ fun FileDetailScreen(
                 }
             }
         }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { landingScreenViewModel.showBottomBars() }
     }
 
     if (showRenameDialog) {

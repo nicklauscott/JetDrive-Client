@@ -73,8 +73,10 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.koin.navGraph)
 
-    implementation(libs.compose.viemodel)
     implementation(libs.coil.compose)
+    implementation(libs.coil)
+
+    implementation(libs.compose.viemodel)
     implementation(libs.kotlinx.serialization)
 
     implementation(libs.ktor.core)

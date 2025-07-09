@@ -34,10 +34,7 @@ class FileDetailScreenViewModel(
     private val _effect: MutableSharedFlow<FileDetailScreenUIEffect> = MutableSharedFlow()
     val effect: SharedFlow<FileDetailScreenUIEffect> = _effect
 
-    init {
-        landingScreenViewModel.hideBottomBars()
-        landingScreenViewModel.hideFab()
-    }
+    init { landingScreenViewModel.hideBottomBars() }
 
     fun onEvent(event: FileDetailScreenUIEvent) {
         when (event) {
@@ -54,9 +51,8 @@ class FileDetailScreenViewModel(
             is FileDetailScreenUIEvent.Delete -> delete(fileNode.id)
             is FileDetailScreenUIEvent.Download -> TODO()
             FileDetailScreenUIEvent.GoBack -> {
-                landingScreenViewModel.showBottomBars()
-                landingScreenViewModel.showFab()
                 backStack.removeAt(backStack.lastIndex)
+                landingScreenViewModel.showBottomBars()
             }
             is FileDetailScreenUIEvent.Move -> {
                 backStack.add(
@@ -78,6 +74,7 @@ class FileDetailScreenViewModel(
             if (response is FileResponse.Successful) {
                 FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
                 backStack.removeAt(backStack.lastIndex)
+                landingScreenViewModel.showBottomBars()
             } else if (response is FileResponse.Failure) {
                 _effect.emit(FileDetailScreenUIEffect.ShowSnackBar(response.message))
             }

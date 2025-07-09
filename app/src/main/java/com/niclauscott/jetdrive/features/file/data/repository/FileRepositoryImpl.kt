@@ -3,8 +3,10 @@ package com.niclauscott.jetdrive.features.file.data.repository
 import android.util.Log
 import com.niclauscott.jetdrive.core.cache.InMemoryCache
 import com.niclauscott.jetdrive.core.cache.model.CachedEntry
-import com.niclauscott.jetdrive.core.model.dto.ErrorMessageDTO
-import com.niclauscott.jetdrive.core.util.TAG
+import com.niclauscott.jetdrive.core.database.dao.TransferDao
+import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
+import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCopyRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeDTO
@@ -26,15 +28,18 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import java.time.LocalDateTime
 
 class FileRepositoryImpl(
     private val baseUrl: String,
     private val client: HttpClient,
+    private val dao: TransferDao,
     private val cache: InMemoryCache<String, CachedEntry>
 ): FileRepository {
 
-    val fileUrl = "$baseUrl/files"
+    private val fileUrl = "$baseUrl/files"
 
     override suspend fun getRootFiles(useCache: Boolean): FileResponse<List<FileNode>> {
         return try {
@@ -70,11 +75,8 @@ class FileRepositoryImpl(
             }
 
             FileResponse.Successful(fileNodes)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            //FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
-            FileResponse.Failure("${ex.message}")
+        } catch (ex: Throwable) {
+            FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
@@ -299,6 +301,25 @@ class FileRepositoryImpl(
             FileResponse.Failure("Connection timeout. Try again")
         } catch (ex: Exception) {
             FileResponse.Failure("Newtwork. Check your error. internet connection")
+        }
+    }
+
+    override fun getAllActiveTransferProgress(): Flow<Float> {
+        return combine(
+            dao.getAllIncompleteDownloads(),
+            dao.getAllIncompleteUploads()
+        ) { downloads, uploads ->
+
+            val totalDownloadBytes = downloads.sumOf { it.downloadStatus.fileSize }
+            val totalDownloadedBytes = downloads.sumOf { it.downloadedBytes }
+
+            val totalUploadBytes = uploads.sumOf { it.totalBytes }
+            val totalUploadedBytes = uploads.sumOf { it.uploadedBytes }
+
+            val totalBytes = totalUploadBytes + totalDownloadBytes
+            val transferredBytes = totalUploadedBytes + totalDownloadedBytes
+
+            if (totalBytes == 0L) 0f else transferredBytes.toFloat() / totalBytes
         }
     }
 

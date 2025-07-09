@@ -21,20 +21,33 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScre
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUiState
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortType
+import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class FileScreenViewModel(
     private val fileNode: FileNode,
     private val backStack: NavBackStack,
-    private val fileRepository: FileRepository
+    private val landingScreenViewModel: LandingScreenViewModel,
+    private val repository: FileRepository
 ): ViewModel() {
 
     private val _state: MutableState<FileScreenUiState> = mutableStateOf(FileScreenUiState(
         parentId = if (fileNode.id == "-1") null else fileNode.id, title = fileNode.name
     ))
     val state: State<FileScreenUiState> = _state
+
+    val activeTransfer: StateFlow<Float> = repository
+        .getAllActiveTransferProgress()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            0f
+        )
 
     private val _effect: MutableSharedFlow<FileScreenUIEffect> = MutableSharedFlow()
     val effect: SharedFlow<FileScreenUIEffect> = _effect
@@ -46,11 +59,11 @@ class FileScreenViewModel(
             is FileScreenUIEvent.Copy -> {
                 backStack.add(
                     CopyMoveScreen(
-                    fileNode = event.fileNode,
-                    folderId = "-1",
-                    folderName = "Choose folder",
-                    action = Action.Copy
-                )
+                        fileNode = event.fileNode,
+                        folderId = "-1",
+                        folderName = "Choose folder",
+                        action = Action.Copy
+                    )
                 )
             }
             is FileScreenUIEvent.Delete -> delete(event.fileId)
@@ -64,11 +77,11 @@ class FileScreenViewModel(
             is FileScreenUIEvent.Move -> {
                 backStack.add(
                     CopyMoveScreen(
-                    fileNode = event.fileNode,
-                    folderId = "-1",
-                    folderName = "Choose folder",
-                    action = Action.Move
-                )
+                        fileNode = event.fileNode,
+                        folderId = "-1",
+                        folderName = "Choose folder",
+                        action = Action.Move
+                    )
                 )
             }
             is FileScreenUIEvent.OpenFileNode -> {
@@ -93,7 +106,7 @@ class FileScreenViewModel(
 
     private fun createNewFolder(folderName: String) {
         viewModelScope.launch {
-            val response = fileRepository.createFolder(
+            val response = repository.createFolder(
                 name = folderName,
                 parentId = state.value.parentId
             )
@@ -108,7 +121,7 @@ class FileScreenViewModel(
 
     private fun delete(fileId: String) {
         viewModelScope.launch {
-            val response = fileRepository.deleteFileNode(fileId = fileId)
+            val response = repository.deleteFileNode(fileId = fileId)
             if (response is FileResponse.Successful) {
                 loadContent(false)
                 FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
@@ -120,7 +133,7 @@ class FileScreenViewModel(
 
     private fun rename(fileId: String, newName: String) {
         viewModelScope.launch {
-            val response = fileRepository.renameFileNode(fileId = fileId, newName = newName)
+            val response = repository.renameFileNode(fileId = fileId, newName = newName)
             if (response is FileResponse.Successful) {
                 loadContent(false)
                 FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
@@ -163,6 +176,7 @@ class FileScreenViewModel(
     }
 
     private fun onAppear() {
+        landingScreenViewModel.showBottomBars()
         if (FileListViewModelRefreshRegistry.shouldRefresh(folderId = fileNode.id)) {
             FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
             FileListViewModelRefreshRegistry.clear(folderId = fileNode.id)
@@ -173,8 +187,8 @@ class FileScreenViewModel(
     private fun loadContent(useCache: Boolean = true) {
         viewModelScope.launch {
             _state.value = state.value.copy(isLoadingFiles = true)
-            val response = if (fileNode.id == "-1") fileRepository.getRootFiles(useCache)
-            else fileRepository.getChildren(fileNode.id, null, useCache)
+            val response = if (fileNode.id == "-1") repository.getRootFiles(useCache)
+            else repository.getChildren(fileNode.id, null, useCache)
 
             if (response is FileResponse.Successful) {
                 _state.value = state.value.copy(

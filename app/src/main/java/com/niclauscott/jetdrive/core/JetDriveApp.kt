@@ -9,7 +9,9 @@ import com.niclauscott.jetdrive.features.auth.di.authModule
 import com.niclauscott.jetdrive.core.splash.di.splashModule
 import com.niclauscott.jetdrive.features.auth.google.di.googleAuthModule
 import com.niclauscott.jetdrive.features.file.di.fileModule
+import com.niclauscott.jetdrive.features.home.di.homeModule
 import com.niclauscott.jetdrive.features.landing.di.landingModule
+import com.niclauscott.jetdrive.features.profile.di.profileModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androix.startup.KoinStartup
@@ -26,6 +28,7 @@ class JetDriveApp: Application(), KoinStartup {
             dataStoreModule, httpClientModule, databaseModule,
             inMemoryCacheModule, splashModule, authModule,
             googleAuthModule, landingModule, fileModule,
+            homeModule, profileModule
         )
     }
 }

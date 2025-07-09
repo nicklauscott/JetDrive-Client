@@ -10,13 +10,16 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.niclauscott.jetdrive.features.file.ui.navigation.FileListNavigationRoot
 import com.niclauscott.jetdrive.features.home.ui.HomeScreen
+import com.niclauscott.jetdrive.features.home.ui.HomeScreenViewModel
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import com.niclauscott.jetdrive.features.profile.ui.ProfileScreen
+import com.niclauscott.jetdrive.features.profile.ui.ProfileScreenViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LandingScreenNavigationRoot(
     modifier: Modifier = Modifier, backStack: NavBackStack,
-    viewModel: LandingScreenViewModel
+    landingScreenViewModel: LandingScreenViewModel
 ) {
     NavDisplay(
         modifier = modifier,
@@ -30,19 +33,21 @@ fun LandingScreenNavigationRoot(
             when (key) {
                 is HomeScreen -> {
                     NavEntry(key = key) {
-                        HomeScreen()
+                        val viewModel: HomeScreenViewModel = koinViewModel()
+                        HomeScreen(viewModel = viewModel)
                     }
                 }
 
                 is FileScreen -> {
                     NavEntry(key = key) {
-                        FileListNavigationRoot(modifier = Modifier, landingScreenViewModel = viewModel)
+                        FileListNavigationRoot(modifier = Modifier, landingScreenViewModel = landingScreenViewModel)
                     }
                 }
 
                 is ProfileScreen -> {
                     NavEntry(key = key) {
-                        ProfileScreen()
+                        val viewModel: ProfileScreenViewModel = koinViewModel()
+                        ProfileScreen(viewModel = viewModel)
                     }
                 }
 

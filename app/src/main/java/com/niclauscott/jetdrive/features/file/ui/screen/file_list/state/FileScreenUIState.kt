@@ -12,7 +12,4 @@ data class FileScreenUiState(
 
     val sortType: SortType = SortType.Name,
     val sortOrder: SortOrder = SortOrder.ASC,
-
-    val activeFileOperation: Boolean = true,
-    val activeFileOperationProgress: Float = 0.2f
 )

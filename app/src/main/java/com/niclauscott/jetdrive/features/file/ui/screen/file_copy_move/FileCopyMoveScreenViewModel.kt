@@ -38,27 +38,25 @@ class FileCopyMoveScreenViewModel(
     val effect: SharedFlow<FileCopyMoveScreenUIEffect> = _effect
 
     init {
-        //landingScreenViewModel.hideBottomBars()
-        //landingScreenViewModel.hideFab()
         loadContent()
+        landingScreenViewModel.hideBottomBars()
     }
 
     fun onEvent(event: FileCopyMoveScreenUIEvent) {
         when(event) {
             FileCopyMoveScreenUIEvent.Complete -> completeAction()
             is FileCopyMoveScreenUIEvent.CreateNewFolder -> createNewFolder(event.folderName)
-            FileCopyMoveScreenUIEvent.GoBack -> backStack.removeAt(backStack.lastIndex)
+            FileCopyMoveScreenUIEvent.GoBack -> {
+                backStack.removeAt(backStack.lastIndex)
+            }
             is FileCopyMoveScreenUIEvent.OpenFolderNode -> backStack.add(
                 CopyMoveScreen(
                     fileNode = event.fileNode, folderId = event.folderId,
                     folderName = event.folderName, action = event.action
                 )
             )
-            FileCopyMoveScreenUIEvent.Cancel -> {
-                backStack.removeAll { it is CopyMoveScreen }
-                //landingScreenViewModel.showFab()
-                //landingScreenViewModel.showBottomBars()
-            }
+            FileCopyMoveScreenUIEvent.Cancel -> backStack.removeAll { it is CopyMoveScreen }
+
             FileCopyMoveScreenUIEvent.RefreshData -> onAppear()
         }
 
@@ -84,8 +82,7 @@ class FileCopyMoveScreenViewModel(
                 // old folder
                 FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
                 backStack.removeAll { it is CopyMoveScreen }
-                //landingScreenViewModel.showFab()
-                //landingScreenViewModel.showBottomBars()
+                landingScreenViewModel.showBottomBars()
             } else if (response is FileResponse.Failure) {
                 _effect.emit(FileCopyMoveScreenUIEffect.ShowSnackbar(response.message))
             }

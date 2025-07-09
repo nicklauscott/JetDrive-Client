@@ -10,8 +10,8 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val fileModule = module {
-    factory<FileRepository>{ FileRepositoryImpl(get(), get(), get())  }
-    viewModel { param -> FileScreenViewModel(param.get(), param.get(), get()) }
+    factory<FileRepository>{ FileRepositoryImpl(get(), get(), get(), get())  }
+    viewModel { param -> FileScreenViewModel(param.get(), param.get(), param.get(), get()) }
     viewModel { param -> FileSearchScreenViewModel(param.get(), param.get(), get()) }
     viewModel { param -> FileDetailScreenViewModel(param.get(), param.get(), param.get(), get()) }
     viewModel { param ->

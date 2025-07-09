@@ -49,12 +49,4 @@ class LandingScreenViewModel: ViewModel() {
         _showBottomBar.value = true
     }
 
-    fun hideFab() {
-        _showFab.value = false
-    }
-
-    fun showFab() {
-        _showFab.value = true
-    }
-
 }

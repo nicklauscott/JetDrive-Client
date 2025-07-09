@@ -47,7 +47,9 @@ koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", versi
 
 compose-viemodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "viewmodelVersion" }
 
-coil-compose = { group = "io.coil-kt", name = "coil", version.ref = "coilVersion" }
+coil = { group = "io.coil-kt", name = "coil", version.ref = "coilVersion" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilVersion" }
+
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "json" }
 
 ktor-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktorVersion" }

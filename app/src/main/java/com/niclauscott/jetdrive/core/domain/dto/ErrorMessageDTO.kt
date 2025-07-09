@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.core.model.dto
+package com.niclauscott.jetdrive.core.domain.dto
 
 import kotlinx.serialization.Serializable
 
