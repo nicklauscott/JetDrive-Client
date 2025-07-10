@@ -194,76 +194,6 @@ fun FileCopyMoveNodeCell(
 }
 
 @Composable
-fun CreateNewFolderDialog1(
-    modifier: Modifier = Modifier,
-    onDismiss: () -> Unit,
-    onCreateClick: (String) -> Unit
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusRequester = remember { FocusRequester() }
-
-    val context = LocalContext.current
-    var name by remember { mutableStateOf("") }
-
-    focusRequester.requestFocus()
-    keyboardController?.show()
-
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.inverseSurface)
-                .padding(
-                    vertical = 2.percentOfScreenHeight(),
-                    horizontal = 3.percentOfScreenWidth()
-                ),
-            verticalArrangement = Arrangement.spacedBy(2.percentOfScreenHeight()),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                getString(context, R.string.create),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.inverseOnSurface
-            )
-
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                value = name,
-                textStyle = MaterialTheme.typography.bodyMedium,
-                onValueChange = { name = it },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.primary,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                )
-            )
-
-            Row(
-                modifier = modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    label = getString(context, R.string.cancel),
-                    enabled = true,
-                    onClick = onDismiss
-                )
-
-                TextButton(
-                    label = getString(context, R.string.create),
-                    enabled = name.isNotBlank(),
-                    onClick = { onCreateClick(name) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun CreateNewFolderDialog(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
@@ -300,7 +230,7 @@ fun CreateNewFolderDialog(
             modifier = modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),

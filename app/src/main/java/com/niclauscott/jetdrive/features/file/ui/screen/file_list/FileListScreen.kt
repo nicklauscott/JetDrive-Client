@@ -5,18 +5,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -29,31 +34,36 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
+import com.niclauscott.jetdrive.core.domain.util.openFileFromCache
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
+import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewTextFilDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DeleteDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DownloadProgressDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileNodeCell
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenTopBar
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenBottomSheet
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenTopBar
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.RenameDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.SortingAndOrderCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
-import com.niclauscott.jetdrive.features.landing.ui.components.FAB
 import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
+import com.niclauscott.jetdrive.features.landing.ui.components.FAB
 import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,21 +71,19 @@ import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
 fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
 
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val sheetState = rememberModalBottomSheetState()
 
     val activeTransfer by viewModel.activeTransfer.collectAsState()
+    val previewState by viewModel.downloadProgress.collectAsState()
 
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
     var selectedFileNode by remember { mutableStateOf<FileNode?>(null) }
-
+    var showBottomSheet by remember { mutableStateOf(false) }
     var showFileActionBottomSheet by remember { mutableStateOf(false) }
     var showCreateFolderDialog by rememberSaveable { mutableStateOf(false) }
     var showCreateTextFileDialog by rememberSaveable { mutableStateOf(false) }
-
     var showRenameDialog by rememberSaveable { mutableStateOf<FileNode?>(null) }
     var showDeleteDialog by rememberSaveable { mutableStateOf<String?>(null) }
-
-    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.onEvent(FileScreenUIEvent.RefreshData) }
 
@@ -86,7 +94,36 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                     Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
                     snackbarHostState.showSnackbar(effect.message)
                 }
+
+                is FileScreenUIEffect.PreviewFile -> {
+                    openFileFromCache(context = context, mimeType = effect.mimeType, file = effect.file)
+                }
             }
+        }
+    }
+
+    if (previewState is FileProgress.Loading) {
+        DownloadProgressDialog((previewState as FileProgress.Loading).percent) {
+            viewModel.onEvent(FileScreenUIEvent.CancelDownload)
+        }
+    }
+
+    if (previewState is FileProgress.Success) {
+        val file = (previewState as FileProgress.Success).data
+
+        LaunchedEffect(file) {
+            openFileFromCache(
+                context = context,
+                mimeType = viewModel.mimeType,
+                file = file
+            )
+        }
+    }
+
+    if (previewState is FileProgress.Failure) {
+        val message = (previewState as FileProgress.Failure).error
+        LaunchedEffect(message) {
+            snackbarHostState.showSnackbar(message)
         }
     }
 
@@ -302,4 +339,3 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
 
     }
 }
-

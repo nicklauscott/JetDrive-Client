@@ -9,12 +9,16 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.niclauscott.jetdrive.features.file.ui.navigation.FileListNavigationRoot
+import com.niclauscott.jetdrive.features.file.ui.navigation.PreviewScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_preview.FilePreviewScreen
+import com.niclauscott.jetdrive.features.file.ui.screen.file_preview.FilePreviewScreenViewModel
 import com.niclauscott.jetdrive.features.home.ui.HomeScreen
 import com.niclauscott.jetdrive.features.home.ui.HomeScreenViewModel
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import com.niclauscott.jetdrive.features.profile.ui.ProfileScreen
 import com.niclauscott.jetdrive.features.profile.ui.ProfileScreenViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun LandingScreenNavigationRoot(
@@ -33,7 +37,9 @@ fun LandingScreenNavigationRoot(
             when (key) {
                 is HomeScreen -> {
                     NavEntry(key = key) {
-                        val viewModel: HomeScreenViewModel = koinViewModel()
+                        val viewModel: HomeScreenViewModel = koinViewModel {
+                            parametersOf(backStack)
+                        }
                         HomeScreen(viewModel = viewModel)
                     }
                 }
@@ -48,6 +54,15 @@ fun LandingScreenNavigationRoot(
                     NavEntry(key = key) {
                         val viewModel: ProfileScreenViewModel = koinViewModel()
                         ProfileScreen(viewModel = viewModel)
+                    }
+                }
+
+                is PreviewScreen -> {
+                    NavEntry(key = key) {
+                        val viewModel: FilePreviewScreenViewModel = koinViewModel {
+                            parametersOf(key.fileNode, backStack, landingScreenViewModel)
+                        }
+                        FilePreviewScreen(landingScreenViewModel = landingScreenViewModel, viewModel = viewModel)
                     }
                 }
 

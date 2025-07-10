@@ -15,7 +15,7 @@ import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeRenameReque
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeTreeResponse
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
-import com.niclauscott.jetdrive.features.file.domain.model.mapper.toFileNode
+import com.niclauscott.jetdrive.features.file.domain.mapper.toFileNode
 import com.niclauscott.jetdrive.features.file.domain.repository.FileRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

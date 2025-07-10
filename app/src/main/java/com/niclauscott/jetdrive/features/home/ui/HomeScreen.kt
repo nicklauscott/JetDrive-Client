@@ -153,6 +153,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
                     val recentFiles = state.value.data?.recentFiles ?: emptyList()
                     items(recentFiles) {
                         HomeFileNodeCellCard(fileNode = it) {
+                            viewModel.onEvent(HomeScreenUIEvent.OpenFileNode(it))
 
                         }
                     }

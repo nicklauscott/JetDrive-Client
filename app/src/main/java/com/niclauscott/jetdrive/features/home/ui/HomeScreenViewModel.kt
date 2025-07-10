@@ -2,11 +2,12 @@ package com.niclauscott.jetdrive.features.home.ui
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation3.runtime.NavBackStack
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
+import com.niclauscott.jetdrive.features.file.ui.navigation.PreviewScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
 import com.niclauscott.jetdrive.features.home.domain.repository.HomeRepository
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEffect
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(
+    private val backStack: NavBackStack,
     private val repository: HomeRepository
 ): ViewModel() {
 
@@ -43,6 +45,9 @@ class HomeScreenViewModel(
         when (event) {
             is HomeScreenUIEvent.CreateNewFolder -> createNewFolder(event.folderName)
             HomeScreenUIEvent.UploadFile -> TODO()
+            is HomeScreenUIEvent.OpenFileNode -> {
+                backStack.add(PreviewScreen(event.fileNode))
+            }
         }
     }
 

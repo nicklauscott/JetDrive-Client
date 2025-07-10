@@ -17,6 +17,7 @@ sealed interface FileScreenUIEvent {
     data class CreateNewFile(val folderName: String) : FileScreenUIEvent
     data object RefreshData: FileScreenUIEvent
     data object Search : FileScreenUIEvent
+    data object CancelDownload : FileScreenUIEvent
 }
 
 enum class SortType {

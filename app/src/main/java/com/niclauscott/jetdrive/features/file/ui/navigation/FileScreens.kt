@@ -15,6 +15,9 @@ data object SearchScreen: NavKey
 data class DetailScreen(val fileNode: FileNode): NavKey
 
 @Serializable
+data class PreviewScreen(val fileNode: FileNode): NavKey
+
+@Serializable
 data class CopyMoveScreen(
     val fileNode: FileNode,
     val folderId: String,

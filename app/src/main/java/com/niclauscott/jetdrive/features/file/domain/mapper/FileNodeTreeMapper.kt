@@ -1,4 +1,4 @@
-package com.niclauscott.jetdrive.features.file.domain.model.mapper
+package com.niclauscott.jetdrive.features.file.domain.mapper
 
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeTreeResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNodeTree

@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val httpClientModule = module {
@@ -29,7 +30,7 @@ val httpClientModule = module {
         else "http://127.0.0.1:9001"
         //baseUrl
 
-        "http://192.168.3.127:8001"
+        "http://192.168.107.127:8001"
         //"http://localhost:8080"
         //"http://10.0.2.2:9001"
     }
@@ -50,6 +51,22 @@ val httpClientModule = module {
             baseUrl = get(),
             client = HttpClient(Android)
         )
+    }
+
+    single(named("unAuthClient")) {
+        HttpClient(Android) {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                })
+            }
+
+            install(Logging) {
+                level = LogLevel.ALL
+                logger = Logger.SIMPLE
+            }
+        }
     }
 
     single {
