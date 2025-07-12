@@ -16,5 +16,7 @@ interface FileRepository {
     suspend fun copyFileNode(fileId: String, parentId: String?): FileResponse<FileNode>
     suspend fun moveFileNode(fileId: String, newParentId: String?): FileResponse<FileNode>
     suspend fun deleteFileNode(fileId: String): FileResponse<Unit>
-    fun getAllActiveTransferProgress(): Flow<Float>
+    fun getAllActiveTransferProgress(): Flow<Float?>
+    suspend fun upload(uri: String)
+    suspend fun download(fileNode: FileNode)
 }

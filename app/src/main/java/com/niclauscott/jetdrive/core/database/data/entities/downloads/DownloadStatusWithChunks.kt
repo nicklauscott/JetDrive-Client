@@ -1,7 +1,8 @@
-package com.niclauscott.jetdrive.core.database.entities.downloads
+package com.niclauscott.jetdrive.core.database.data.entities.downloads
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.niclauscott.jetdrive.core.database.data.entities.Transfer
 
 data class DownloadStatusWithChunks(
     @Embedded val downloadStatus: DownloadStatus,

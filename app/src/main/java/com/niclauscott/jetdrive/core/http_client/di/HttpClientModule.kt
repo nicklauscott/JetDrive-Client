@@ -30,7 +30,7 @@ val httpClientModule = module {
         else "http://127.0.0.1:9001"
         //baseUrl
 
-        "http://192.168.107.127:8001"
+        "http://192.168.193.127:8001"
         //"http://localhost:8080"
         //"http://10.0.2.2:9001"
     }
@@ -84,7 +84,7 @@ val httpClientModule = module {
             }
 
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.NONE
                 logger = Logger.SIMPLE
             }
         }

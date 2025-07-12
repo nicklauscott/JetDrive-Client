@@ -1,6 +1,8 @@
 package com.niclauscott.jetdrive.features.home.data.repository
 
-import com.niclauscott.jetdrive.core.database.dao.TransferDao
+import android.content.Context
+import com.niclauscott.jetdrive.core.database.data.dao.TransferDao
+import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.domain.dto.UserFileStatsResponseDTO
 import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
@@ -8,6 +10,8 @@ import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateReque
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.core.domain.model.UserFileStats
 import com.niclauscott.jetdrive.core.domain.mapper.toUserFileStats
+import com.niclauscott.jetdrive.core.domain.util.getFileInfo
+import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferServiceController
 import com.niclauscott.jetdrive.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -20,11 +24,14 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import java.util.UUID
 
 class HomeRepositoryImpl(
     baseUrl: String,
     private val client: HttpClient,
-    private val dao: TransferDao
+    private val dao: TransferDao,
+    private val context: Context,
+    private val serviceController: TransferServiceController
 ): HomeRepository {
 
     private val fileUrl = "$baseUrl/files"
@@ -74,23 +81,42 @@ class HomeRepositoryImpl(
         }
     }
 
-    override fun getAllActiveTransferProgress(): Flow<Float> {
+    override fun getAllActiveTransferProgress(): Flow<Float?> {
         return combine(
-            dao.getAllIncompleteDownloads(),
-            dao.getAllIncompleteUploads()
+            dao.getIncompleteDownloads(),
+            dao.getIncompleteUploads()
         ) { downloads, uploads ->
 
-            val totalDownloadBytes = downloads.sumOf { it.downloadStatus.fileSize }
-            val totalDownloadedBytes = downloads.sumOf { it.downloadedBytes }
+            if (downloads.isEmpty() && uploads.isEmpty()) {
+                null
+            } else {
 
-            val totalUploadBytes = uploads.sumOf { it.totalBytes }
-            val totalUploadedBytes = uploads.sumOf { it.uploadedBytes }
+                val totalDownloadBytes = downloads.sumOf { it.fileSize }
+                val totalDownloadedBytes = downloads.sumOf { it.downloadedBytes }
 
-            val totalBytes = totalUploadBytes + totalDownloadBytes
-            val transferredBytes = totalUploadedBytes + totalDownloadedBytes
+                val totalUploadBytes = uploads.sumOf { it.totalBytes }
+                val totalUploadedBytes = uploads.sumOf { it.uploadedBytes }
 
-            if (totalBytes == 0L) 0f else transferredBytes.toFloat() / totalBytes
+                val totalBytes = totalUploadBytes + totalDownloadBytes
+                val transferredBytes = totalUploadedBytes + totalDownloadedBytes
+
+                if (totalBytes == 0L) 0f else transferredBytes.toFloat() / totalBytes
+            }
         }
+    }
+
+    override suspend fun upload(uri: String) {
+        val uriData = getFileInfo(uri, context)
+        val maxQueuePosition = dao.getUploadMaxQueuePosition() ?: 0
+        val uploadStatus = UploadStatus(
+            id = UUID.randomUUID(),
+            uri = uri,
+            fileName = uriData?.fileName ?: "Unknown file",
+            totalBytes = uriData?.fileSize ?: -1L,
+            queuePosition = maxQueuePosition + 1
+        )
+        dao.saveUploadStatus(uploadStatus)
+        serviceController.ensureServiceRunning()
     }
 
 }

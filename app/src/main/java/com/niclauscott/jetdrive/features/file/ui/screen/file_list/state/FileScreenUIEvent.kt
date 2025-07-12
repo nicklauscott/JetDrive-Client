@@ -8,7 +8,7 @@ sealed interface FileScreenUIEvent {
     data class OpenFileNode(val fileNode: FileNode): FileScreenUIEvent
     data class Sort(val sortOrder: SortOrder, val sortType: SortType): FileScreenUIEvent
     data class FileDetails(val fileNode: FileNode): FileScreenUIEvent
-    data class Download(val fileId: String): FileScreenUIEvent
+    data class Download(val fileNode: FileNode): FileScreenUIEvent
     data class Rename(val fileId: String, val newName: String): FileScreenUIEvent
     data class Move(val fileNode: FileNode): FileScreenUIEvent
     data class Copy(val fileNode: FileNode): FileScreenUIEvent

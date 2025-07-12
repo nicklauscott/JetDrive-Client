@@ -1,5 +1,8 @@
 package com.niclauscott.jetdrive.features.home.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +58,12 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
     val state = viewModel.state
     val context = LocalContext.current
 
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        viewModel.onEvent(HomeScreenUIEvent.UploadFile(uri.toString()))
+    }
+
     if (showCreateFolderDialog) {
         CreateNewFolderDialog(
             onDismiss = { showCreateFolderDialog = false }
@@ -70,8 +79,8 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
             .background(MaterialTheme.colorScheme.background),
         floatingActionButton = {
             FAB(
-                showActiveFileOperationFAB = activeTransfer > 0f,
-                progress = activeTransfer,
+                showActiveFileOperationFAB = activeTransfer != null,
+                progress = activeTransfer ?: 0f,
                 onClickActiveFileOperationFAB = {},
                 showFileOperationFAB = true
             ) { showBottomSheet = true }
@@ -89,7 +98,9 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
             ) { fileAction ->
                 when (fileAction) {
                     FileActions.CreateFolder -> showCreateFolderDialog = true
-                    FileActions.UploadFile -> {}
+                    FileActions.UploadFile -> {
+                        launcher.launch(arrayOf("*/*"))
+                    }
                 }
                 showBottomSheet = false
             }
@@ -109,7 +120,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
                 return@Scaffold
             }
 
-            !state.value.isLoading && state.value.error != null ->  {
+            !state.value.isLoading && state.value.data == null ->  {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,

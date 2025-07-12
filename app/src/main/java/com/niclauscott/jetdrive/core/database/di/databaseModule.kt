@@ -2,7 +2,7 @@ package com.niclauscott.jetdrive.core.database.di
 
 import androidx.room.Room
 import com.niclauscott.jetdrive.core.database.JetDriveDatabase
-import com.niclauscott.jetdrive.core.database.dao.TransferDao
+import com.niclauscott.jetdrive.core.database.data.dao.TransferDao
 import org.koin.dsl.module
 
 val databaseModule = module {

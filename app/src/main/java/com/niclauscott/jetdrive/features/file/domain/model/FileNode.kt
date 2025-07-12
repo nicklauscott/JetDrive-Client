@@ -11,7 +11,7 @@ data class FileNode(
     val id: String = "-1",
     val name: String = "Drive",
     val type: FileType = FileType.Unknown,
-    private val size: Long = 0L,
+    val size: Long = 0L,
     val parentId: String? = null,
     val hasThumbnail: Boolean = false,
     val mimeType: String? = null,

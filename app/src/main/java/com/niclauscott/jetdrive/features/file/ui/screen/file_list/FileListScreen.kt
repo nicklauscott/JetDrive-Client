@@ -172,8 +172,8 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
         modifier = modifier.fillMaxSize(),
         floatingActionButton = {
             FAB(
-                showActiveFileOperationFAB = activeTransfer > 0f,
-                progress = activeTransfer,
+                showActiveFileOperationFAB = activeTransfer != null,
+                progress = activeTransfer ?: 0f,
                 onClickActiveFileOperationFAB = {},
                 showFileOperationFAB = true
             ) { showFileActionBottomSheet = true }
@@ -234,7 +234,11 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                             viewModel.onEvent(FileScreenUIEvent.FileDetails(fileNode))
                         }
                     }
-                    Action.Download -> {}
+                    Action.Download -> {
+                        selectedFileNode?.let { fileNode ->
+                            viewModel.onEvent(FileScreenUIEvent.Download(fileNode))
+                        }
+                    }
                 }
                 selectedFileNode = null
             }

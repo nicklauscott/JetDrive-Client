@@ -52,7 +52,7 @@ class FileScreenViewModel(
     ))
     val state: State<FileScreenUiState> = _state
 
-    val activeTransfer: StateFlow<Float> = repository
+    val activeTransfer: StateFlow<Float?> = repository
         .getAllActiveTransferProgress()
         .stateIn(
             viewModelScope,
@@ -83,7 +83,7 @@ class FileScreenViewModel(
                 )
             }
             is FileScreenUIEvent.Delete -> delete(event.fileId)
-            is FileScreenUIEvent.Download -> TODO()
+            is FileScreenUIEvent.Download -> downloadFile(event.fileNode)
             is FileScreenUIEvent.FileDetails -> {
                 backStack.add(DetailScreen(event.fileNode))
             }
@@ -244,18 +244,24 @@ class FileScreenViewModel(
 
             if (response is FileResponse.Successful) {
                 mimeType = fileNode.mimeType ?: ""
-                 startDownload(response.data)
+                downloadFileForPreview(response.data)
             }
         }
     }
 
-    private fun startDownload(url: String) {
+    private fun downloadFileForPreview(url: String) {
         _downloadProgress.update { FileProgress.Loading(null) }
         downloadJob = viewModelScope.launch {
             preview.downloadToCacheFile(url)
                 .collect { progress ->
                     _downloadProgress.value = progress
                 }
+        }
+    }
+
+    private fun downloadFile(fileNode: FileNode) {
+        viewModelScope.launch {
+            repository.download(fileNode)
         }
     }
 }

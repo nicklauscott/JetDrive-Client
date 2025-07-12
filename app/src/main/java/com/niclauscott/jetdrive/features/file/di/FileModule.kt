@@ -14,7 +14,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val fileModule = module {
-    factory<FileRepository> { FileRepositoryImpl(get(), get(), get(), get())  }
+    factory<FileRepository> { FileRepositoryImpl(get(), get(), get(), get(), get(), get())  }
     factory<FilePreviewRepository> {
         FilePreviewRepositoryImpl(
             get(), get(), get(),

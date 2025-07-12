@@ -71,6 +71,7 @@ dependencies {
 
     implementation(libs.koin.startUp)
     implementation(libs.koin.compose)
+    implementation(libs.koin.workmanager)
     implementation(libs.koin.navGraph)
 
     implementation(libs.coil.compose)
@@ -91,6 +92,7 @@ dependencies {
 
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+    implementation(libs.androidx.work.runtime.ktx)
 
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)

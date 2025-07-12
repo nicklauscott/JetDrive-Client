@@ -1,12 +1,17 @@
 package com.niclauscott.jetdrive.features.file.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.niclauscott.jetdrive.core.cache.InMemoryCache
 import com.niclauscott.jetdrive.core.cache.model.CachedEntry
-import com.niclauscott.jetdrive.core.database.dao.TransferDao
+import com.niclauscott.jetdrive.core.database.data.dao.TransferDao
+import com.niclauscott.jetdrive.core.database.data.entities.downloads.DownloadStatus
+import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.domain.util.getFileInfo
 import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
+import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferServiceController
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCopyRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeDTO
@@ -31,12 +36,15 @@ import io.ktor.http.parameters
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.LocalDateTime
+import java.util.UUID
 
 class FileRepositoryImpl(
     private val baseUrl: String,
     private val client: HttpClient,
     private val dao: TransferDao,
-    private val cache: InMemoryCache<String, CachedEntry>
+    private val cache: InMemoryCache<String, CachedEntry>,
+    private val context: Context,
+    private val serviceController: TransferServiceController
 ): FileRepository {
 
     private val fileUrl = "$baseUrl/files"
@@ -304,23 +312,55 @@ class FileRepositoryImpl(
         }
     }
 
-    override fun getAllActiveTransferProgress(): Flow<Float> {
+    override fun getAllActiveTransferProgress(): Flow<Float?> {
         return combine(
-            dao.getAllIncompleteDownloads(),
-            dao.getAllIncompleteUploads()
+            dao.getIncompleteDownloads(),
+            dao.getIncompleteUploads()
         ) { downloads, uploads ->
 
-            val totalDownloadBytes = downloads.sumOf { it.downloadStatus.fileSize }
-            val totalDownloadedBytes = downloads.sumOf { it.downloadedBytes }
+            if (downloads.isEmpty() && uploads.isEmpty()) {
+                null
+            } else {
+                val totalDownloadBytes = downloads.sumOf { it.fileSize }
+                val totalDownloadedBytes = downloads.sumOf { it.downloadedBytes }
 
-            val totalUploadBytes = uploads.sumOf { it.totalBytes }
-            val totalUploadedBytes = uploads.sumOf { it.uploadedBytes }
+                val totalUploadBytes = uploads.sumOf { it.totalBytes }
+                val totalUploadedBytes = uploads.sumOf { it.uploadedBytes }
 
-            val totalBytes = totalUploadBytes + totalDownloadBytes
-            val transferredBytes = totalUploadedBytes + totalDownloadedBytes
+                val totalBytes = totalUploadBytes + totalDownloadBytes
+                val transferredBytes = totalUploadedBytes + totalDownloadedBytes
 
-            if (totalBytes == 0L) 0f else transferredBytes.toFloat() / totalBytes
+                if (totalBytes == 0L) 0f else transferredBytes.toFloat() / totalBytes
+            }
         }
+    }
+
+    override suspend fun upload(uri: String) {
+        val uriData = getFileInfo(uri, context)
+        val maxQueuePosition = dao.getUploadMaxQueuePosition() ?: 0
+        val uploadStatus = UploadStatus(
+            id = UUID.randomUUID(),
+            uri = uri,
+            fileName = uriData?.fileName ?: "Unknown file",
+            totalBytes = uriData?.fileSize ?: -1L,
+            queuePosition = maxQueuePosition + 1
+        )
+        dao.saveUploadStatus(uploadStatus)
+        serviceController.ensureServiceRunning()
+    }
+
+    override suspend fun download(fileNode: FileNode) {
+        val maxQueuePosition = dao.getUploadMaxQueuePosition() ?: 0
+        val downloadStatus = DownloadStatus(
+            fileId = UUID.fromString(fileNode.id),
+            fileName = fileNode.name,
+            fileSize = fileNode.size,
+            mimeType = fileNode.mimeType ?: "unknown/unknown",
+            queuePosition = maxQueuePosition + 1
+        )
+        dao.saveDownloadStatus(downloadStatus)
+        Log.d(TAG("FileRepositoryImpl"), "download: fileNode: $fileNode")
+        serviceController.ensureServiceRunning()
     }
 
     private fun getCachedRootFiles(): List<CachedEntry> {

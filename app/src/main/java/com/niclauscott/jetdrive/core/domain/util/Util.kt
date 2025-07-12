@@ -3,9 +3,12 @@ package com.niclauscott.jetdrive.core.domain.util
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.core.content.FileProvider
+import com.niclauscott.jetdrive.core.domain.model.UriData
 import java.io.File
+import androidx.core.net.toUri
 
 val TAG: (String) -> String = {
     "JET_DRIVE_APP -> $it"
@@ -44,4 +47,21 @@ fun getNetworkErrorMessage(e: Throwable): String {
         is java.net.SocketException -> "Network error occurred."
         else -> "Something went wrong. Please try again."
     }
+}
+
+fun getFileInfo(uri: String, context: Context): UriData? {
+    val cursor = context.contentResolver.query(
+        uri.toUri(),
+        arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
+        null, null, null,
+    ) ?: return null
+
+    cursor.use {
+        if (it.moveToFirst()) {
+            val name = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+            val size = it.getLong(it.getColumnIndexOrThrow(OpenableColumns.SIZE))
+            return UriData(name, size)
+        }
+    }
+    return null
 }

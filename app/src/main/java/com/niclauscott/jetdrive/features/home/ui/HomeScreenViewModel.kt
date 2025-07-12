@@ -1,11 +1,13 @@
 package com.niclauscott.jetdrive.features.home.ui
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
+import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.ui.navigation.PreviewScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -31,7 +34,7 @@ class HomeScreenViewModel(
     private val _effect: MutableSharedFlow<HomeScreenUIEffect> = MutableSharedFlow()
     val effect: SharedFlow<HomeScreenUIEffect> = _effect
 
-    val activeTransfer: StateFlow<Float> = repository
+    val activeTransfer: StateFlow<Float?> = repository
         .getAllActiveTransferProgress()
         .stateIn(
             viewModelScope,
@@ -44,10 +47,16 @@ class HomeScreenViewModel(
     fun onEvent(event: HomeScreenUIEvent) {
         when (event) {
             is HomeScreenUIEvent.CreateNewFolder -> createNewFolder(event.folderName)
-            HomeScreenUIEvent.UploadFile -> TODO()
+            is HomeScreenUIEvent.UploadFile -> uploadFile(event.uri)
             is HomeScreenUIEvent.OpenFileNode -> {
                 backStack.add(PreviewScreen(event.fileNode))
             }
+        }
+    }
+
+    private fun uploadFile(uri: String) {
+        viewModelScope.launch {
+            repository.upload(uri)
         }
     }
 
@@ -64,7 +73,7 @@ class HomeScreenViewModel(
     }
 
     private fun loadData() {
-        _state.value = state.value.copy(isLoading = false)
+        _state.value = state.value.copy(isLoading = true)
         viewModelScope.launch {
             val response = repository.getStats()
             if (response is FileResponse.Failure) {
