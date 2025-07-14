@@ -1,13 +1,11 @@
 package com.niclauscott.jetdrive.features.home.ui
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
-import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.ui.navigation.PreviewScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
@@ -15,11 +13,11 @@ import com.niclauscott.jetdrive.features.home.domain.repository.HomeRepository
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEffect
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUiState
+import com.niclauscott.jetdrive.features.landing.ui.navigation.Transfer
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -48,9 +46,8 @@ class HomeScreenViewModel(
         when (event) {
             is HomeScreenUIEvent.CreateNewFolder -> createNewFolder(event.folderName)
             is HomeScreenUIEvent.UploadFile -> uploadFile(event.uri)
-            is HomeScreenUIEvent.OpenFileNode -> {
-                backStack.add(PreviewScreen(event.fileNode))
-            }
+            is HomeScreenUIEvent.OpenFileNode ->  backStack.add(PreviewScreen(event.fileNode))
+            HomeScreenUIEvent.OpenTransferScreen -> { backStack.add(Transfer) }
         }
     }
 

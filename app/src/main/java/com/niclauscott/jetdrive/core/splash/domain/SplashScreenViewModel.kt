@@ -3,14 +3,10 @@ package com.niclauscott.jetdrive.core.splash.domain
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
-import com.niclauscott.jetdrive.core.splash.domain.model.constant.AuthValidationResponse
 import com.niclauscott.jetdrive.core.splash.domain.repository.AuthValidationRepository
-import com.niclauscott.jetdrive.core.ui.navigation.LandingScreen
-import com.niclauscott.jetdrive.core.ui.navigation.LoginScreen
-import com.niclauscott.jetdrive.features.landing.ui.LandingScreen
-import kotlinx.coroutines.launch
+import com.niclauscott.jetdrive.core.ui.navigation.Landing
+import com.niclauscott.jetdrive.core.ui.navigation.Login
 
 class SplashScreenViewModel(
     private val authRepository: AuthValidationRepository
@@ -23,8 +19,8 @@ class SplashScreenViewModel(
         get() = _screen.value != null
 
     init {
-        _screen.value = LandingScreen // Remove later
-        //_screen.value = LoginScreen(null) // Remove later
+        //_screen.value = Landing // Remove later
+        _screen.value = Login(null) // Remove later
         /* // Uncomment later
         viewModelScope.launch {
             val response = authRepository.validate()

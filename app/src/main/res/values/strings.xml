@@ -52,5 +52,10 @@
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
     <string name="update">Update</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="transfer">Transfers</string>
+    <string name="resume_transfer">Resume transfer</string>
+    <string name="pause_transfer">Pause transfer</string>
 
 </resources>

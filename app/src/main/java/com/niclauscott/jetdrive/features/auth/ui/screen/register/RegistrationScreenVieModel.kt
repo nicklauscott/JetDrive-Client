@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
-import com.niclauscott.jetdrive.core.ui.navigation.LoginScreen
+import com.niclauscott.jetdrive.core.ui.navigation.Login
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.RegisterRequestDTO
 import com.niclauscott.jetdrive.features.auth.domain.repository.AuthRepository
@@ -32,7 +32,7 @@ class RegistrationScreenVieModel(
         when (event) {
             RegisterScreenUIEvent.Login -> {
                 backStack.clear()
-                backStack.add(LoginScreen(null))
+                backStack.add(Login(null))
             }
             is RegisterScreenUIEvent.RegisterScreen -> register(event.request)
         }
@@ -46,7 +46,7 @@ class RegistrationScreenVieModel(
                 _effect.emit(RegisterScreenUIEffect.ShowSnackbar("Registration successful"))
                 _state.value = state.value.copy(isRegistering = false, successful = true)
                 backStack.clear()
-                backStack.add(LoginScreen(request.email))
+                backStack.add(Login(request.email))
             } else if (response is AuthResponse.RegistrationFailure) {
                 response.message?.let { _effect.emit(RegisterScreenUIEffect.ShowSnackbar(it)) }
                 _state.value = state.value.copy(isRegistering = false, errorMessage = response.message)

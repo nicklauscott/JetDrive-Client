@@ -12,6 +12,7 @@ fun Download.toEntity(): DownloadStatus =
         sizePerChunk = sizePerChunk,
         numberOfChunks = numberOfChunks,
         status = status,
+        downloadedBytes = downloadedBytes,
         mimeType = mimeType,
         queuePosition = queuePosition
     )
@@ -25,6 +26,7 @@ fun DownloadStatus.toModel():  Download =
         sizePerChunk = sizePerChunk,
         numberOfChunks = numberOfChunks,
         status = status,
+        downloadedBytes = downloadedBytes,
         mimeType = mimeType,
         queuePosition = queuePosition,
         speed = speed,

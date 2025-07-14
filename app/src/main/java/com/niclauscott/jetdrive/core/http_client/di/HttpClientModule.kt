@@ -84,7 +84,7 @@ val httpClientModule = module {
             }
 
             install(Logging) {
-                level = LogLevel.NONE
+                level = LogLevel.HEADERS
                 logger = Logger.SIMPLE
             }
         }

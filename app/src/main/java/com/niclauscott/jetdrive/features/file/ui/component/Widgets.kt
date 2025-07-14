@@ -25,13 +25,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
-
+@Preview
 @Composable
-fun VerticalReorderList(modifier: Modifier) {
+fun VerticalReorderList(modifier: Modifier = Modifier) {
     val hapticFeedback = LocalHapticFeedback.current
     var list by remember { mutableStateOf(List(100) { "Item $it" }) }
     val lazyListState = rememberLazyListState()

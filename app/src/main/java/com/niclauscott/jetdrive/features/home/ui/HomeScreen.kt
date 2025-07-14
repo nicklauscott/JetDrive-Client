@@ -1,6 +1,8 @@
 package com.niclauscott.jetdrive.features.home.ui
 
+import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -36,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
+import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
@@ -61,8 +64,17 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
-        viewModel.onEvent(HomeScreenUIEvent.UploadFile(uri.toString()))
+        if (uri != null) {
+            try {
+                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(uri, flags)
+                viewModel.onEvent(HomeScreenUIEvent.UploadFile(uri.toString()))
+            } catch (e: SecurityException) {
+                Log.e(TAG("HomeScreen"), "Unable to persist URI permission: ${e.message}")
+            }
+        }
     }
+
 
     if (showCreateFolderDialog) {
         CreateNewFolderDialog(
@@ -81,7 +93,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
             FAB(
                 showActiveFileOperationFAB = activeTransfer != null,
                 progress = activeTransfer ?: 0f,
-                onClickActiveFileOperationFAB = {},
+                onClickActiveFileOperationFAB = { viewModel.onEvent(HomeScreenUIEvent.OpenTransferScreen) },
                 showFileOperationFAB = true
             ) { showBottomSheet = true }
         },

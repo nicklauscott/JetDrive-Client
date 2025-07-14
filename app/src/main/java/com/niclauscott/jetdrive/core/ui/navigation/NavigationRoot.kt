@@ -38,21 +38,21 @@ fun NavigationRoot(
             ),
             entryProvider = { key ->
                 when (key) {
-                    is LoginScreen -> {
+                    is Login -> {
                         NavEntry(key = key) {
                             val viewModel: LoginScreenVieModel = koinViewModel { parametersOf(backStack) }
                             LoginScreen(email = key.email, viewModel = viewModel)
                         }
                     }
 
-                    is RegisterScreen -> {
+                    is Register -> {
                         NavEntry(key = key) {
                             val viewModel: RegistrationScreenVieModel = koinViewModel { parametersOf(backStack) }
                             RegisterScreen(viewModel = viewModel)
                         }
                     }
 
-                    is LandingScreen -> {
+                    is Landing -> {
                         NavEntry(key = key) {
                             val viewModel: LandingScreenViewModel = koinViewModel()
                             LandingScreen(viewModel = viewModel)

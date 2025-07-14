@@ -1,23 +1,22 @@
 package com.niclauscott.jetdrive.core.transfer.data.repository
 
 import com.niclauscott.jetdrive.core.database.data.dao.TransferDao
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.downloads.DownloadStatus
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import com.niclauscott.jetdrive.core.transfer.domain.model.IncompleteTransfer
-import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferRepository
+import com.niclauscott.jetdrive.core.transfer.domain.repository.AppTransferRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.util.UUID
 
-class TransferRepositoryImpl(private val dao: TransferDao): TransferRepository {
+class AppAppTransferRepositoryImpl(private val dao: TransferDao): AppTransferRepository {
 
     override fun getAllActiveTransferProgress(): Flow<Float?> {
         return combine(
             dao.getActiveAndPendingDownloads(),
             dao.getActiveAndPendingUploads()
         ) { downloads, uploads ->
-
             if (downloads.isEmpty() && uploads.isEmpty()) {
                 null
             } else {
@@ -36,19 +35,10 @@ class TransferRepositoryImpl(private val dao: TransferDao): TransferRepository {
     }
 
     override fun getAllIncompleteTransfer(): Flow<List<IncompleteTransfer>> {
-        return combine(
-            dao.getIncompleteDownloads(), dao.getIncompleteUploads()
-        ) { downloads, uploads ->
-            val activeDownloads = downloads.filter {
-                !listOf(TransferStatus.FAILED, TransferStatus.CANCELLED, TransferStatus.COMPLETED)
-                    .contains(it.status) }
-                .map { IncompleteTransfer(it, IncompleteTransfer.TransferType.DOWNLOAD) }
+        return combine(dao.getActiveAndPendingDownloads(), dao.getActiveAndPendingUploads()) { downloads, uploads ->
+            val activeDownloads = downloads.map { IncompleteTransfer(it, IncompleteTransfer.TransferType.DOWNLOAD) }
 
-            val activeUploads = uploads.filter {
-                !listOf(TransferStatus.FAILED, TransferStatus.CANCELLED, TransferStatus.COMPLETED)
-                    .contains(it.status) }
-                .map { IncompleteTransfer(it, IncompleteTransfer.TransferType.UPLOAD) }
-
+            val activeUploads = uploads.map { IncompleteTransfer(it, IncompleteTransfer.TransferType.UPLOAD) }
             activeUploads + activeDownloads
         }
     }
@@ -63,23 +53,12 @@ class TransferRepositoryImpl(private val dao: TransferDao): TransferRepository {
 
     override suspend fun saveUploadStatus(uploadStatus: UploadStatus): UploadStatus {
         dao.saveUploadStatus(uploadStatus)
-        val status = dao.getUploadById(uploadStatus.id)
-        if (status != null && status.uploadedBytes >= status.totalBytes) {
-            dao.saveUploadStatus(status.copy(status = TransferStatus.COMPLETED))
-            return status
-        }
-        return status ?: uploadStatus
+        return dao.getUploadById(uploadStatus.id) ?: uploadStatus
     }
 
     override suspend fun saveDownloadStatus(downloadStatus: DownloadStatus): DownloadStatus {
         dao.saveDownloadStatus(downloadStatus)
-        val status = dao.getDownloadStatus(downloadStatus.id)
-        if (status != null && status.isComplete) {
-            val download = status.copy(status = TransferStatus.COMPLETED)
-            dao.saveDownloadStatus(download)
-            return download
-        }
-        return status ?: downloadStatus
+        return dao.getDownloadStatus(downloadStatus.id)  ?: downloadStatus
     }
 
     override suspend fun deleteUploadStatusById(id: UUID) {

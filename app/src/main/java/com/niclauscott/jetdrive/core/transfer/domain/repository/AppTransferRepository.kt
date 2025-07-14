@@ -6,7 +6,7 @@ import com.niclauscott.jetdrive.core.transfer.domain.model.IncompleteTransfer
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
-interface TransferRepository {
+interface AppTransferRepository {
     fun getAllActiveTransferProgress(): Flow<Float?>
     fun getAllIncompleteTransfer(): Flow<List<IncompleteTransfer>>
     suspend fun getUploadStatusById(id: UUID): UploadStatus?

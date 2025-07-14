@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.niclauscott.jetdrive.core.database.data.entities.Transfer
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import java.util.UUID
 
 @Entity

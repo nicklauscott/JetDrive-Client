@@ -26,6 +26,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScre
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortType
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
+import com.niclauscott.jetdrive.features.landing.ui.navigation.Transfer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -130,6 +131,7 @@ class FileScreenViewModel(
                 downloadJob?.cancel()
                 _downloadProgress.value = FileProgress.Idle
             }
+            FileScreenUIEvent.OpenTransferScreen -> backStack.add(Transfer)
         }
     }
 

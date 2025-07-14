@@ -4,7 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
+import androidx.room.Update
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.downloads.DownloadStatus
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,8 @@ interface TransferDao {
     @Query("SELECT MAX(queue_position) FROM DownloadStatus")
     suspend fun getDownloadMaxQueuePosition(): Int?
 
+    @Update
+    suspend fun updateDownloadStatus(items: List<DownloadStatus>)
 
 
 
@@ -66,4 +69,7 @@ interface TransferDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveUploadStatus(uploadStatus: UploadStatus)
+
+    @Update
+    suspend fun updateUploadStatus(items: List<UploadStatus>)
 }

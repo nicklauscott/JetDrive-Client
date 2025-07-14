@@ -2,9 +2,9 @@ package com.niclauscott.jetdrive.core.transfer.data.service
 
 import android.content.Context
 import android.os.Environment
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.downloads.DownloadStatus
-import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferRepository
+import com.niclauscott.jetdrive.core.transfer.domain.repository.AppTransferRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class DownloadService(
     baseUrl: String, private val client: HttpClient,
     context: Context, private val downloadStatus: DownloadStatus,
-    private val repository: TransferRepository,
+    private val repository: AppTransferRepository,
 ) {
     private val chunkSize = 1024 * 1024L
     private val downloadUrl: (String) -> String = { "$baseUrl/files/download/$it" }

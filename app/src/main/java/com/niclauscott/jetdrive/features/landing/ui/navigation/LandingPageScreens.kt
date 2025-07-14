@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable data object HomeScreen : NavKey
 @Serializable data object FileScreen : NavKey
 @Serializable data object ProfileScreen : NavKey
-@Serializable data object DownloadUploadScreen : NavKey
+@Serializable data object Transfer : NavKey
 

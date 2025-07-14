@@ -18,6 +18,7 @@ sealed interface FileScreenUIEvent {
     data object RefreshData: FileScreenUIEvent
     data object Search : FileScreenUIEvent
     data object CancelDownload : FileScreenUIEvent
+    data object OpenTransferScreen: FileScreenUIEvent
 }
 
 enum class SortType {

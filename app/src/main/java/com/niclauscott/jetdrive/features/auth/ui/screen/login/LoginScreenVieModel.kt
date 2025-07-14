@@ -7,8 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
-import com.niclauscott.jetdrive.core.ui.navigation.LandingScreen
-import com.niclauscott.jetdrive.core.ui.navigation.RegisterScreen
+import com.niclauscott.jetdrive.core.ui.navigation.Landing
+import com.niclauscott.jetdrive.core.ui.navigation.Register
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.LoginRequestDTO
 import com.niclauscott.jetdrive.features.auth.domain.repository.AuthRepository
@@ -36,7 +36,7 @@ class LoginScreenVieModel(
         when (event) {
             is LoginScreenUIEvent.GoogleLoginScreen -> googleLogin(event.context)
             is LoginScreenUIEvent.LoginScreen -> login(event.email, event.password)
-            LoginScreenUIEvent.Register -> backStack.add(RegisterScreen)
+            LoginScreenUIEvent.Register -> backStack.add(Register)
         }
     }
 
@@ -57,7 +57,7 @@ class LoginScreenVieModel(
 
             if (response == AuthResponse.LoginSuccessful) {
                 backStack.clear()
-                backStack.add(LandingScreen)
+                backStack.add(Landing)
             }
         }
     }
@@ -69,7 +69,7 @@ class LoginScreenVieModel(
             if (response == AuthResponse.LoginSuccessful) {
                 _state.value = state.value.copy(isLoginIn = false)
                 backStack.clear()
-                backStack.add(LandingScreen)
+                backStack.add(Landing)
             } else if (response is AuthResponse.LoginFailed) {
                 _state.value = state.value.copy(isLoginIn = false, errorMessage = response.message)
                 response.message?.let { _effect.emit(LoginScreenUIEffect.ShowSnackbar(it)) }

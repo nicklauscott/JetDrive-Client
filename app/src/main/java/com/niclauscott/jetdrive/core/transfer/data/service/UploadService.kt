@@ -1,13 +1,13 @@
 package com.niclauscott.jetdrive.core.transfer.data.service
 
 import android.util.Log
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.transfer.data.model.dto.upload.UploadInitiateRequest
 import com.niclauscott.jetdrive.core.transfer.data.model.dto.upload.UploadInitiateResponse
 import com.niclauscott.jetdrive.core.transfer.data.model.dto.upload.UploadProgressResponse
-import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferRepository
+import com.niclauscott.jetdrive.core.transfer.domain.repository.AppTransferRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class UploadService(
     baseUrl: String, private val client: HttpClient,
     upload: UploadStatus, private val inputStream: InputStream,
-    private val repository: TransferRepository,
+    private val repository: AppTransferRepository,
 ) {
     private val initiateUrl = "$baseUrl/files/upload/initiate"
     private val uploadChunkUrl: (String) -> String = { "$baseUrl/files/upload/$it" }
@@ -39,22 +39,31 @@ class UploadService(
     private val completeUrl: (String) -> String = { "$baseUrl/files/upload/$it/complete" }
 
     private var uploadStatus = upload
-    private var run = AtomicBoolean(true)
     private val recentSpeed = mutableListOf<Double>()
 
     suspend fun init() {
-        val initiateResponse: UploadInitiateResponse = initiateUpload()
-        uploadStatus = repository.saveUploadStatus(uploadStatus.copy(
-            uploadId = UUID.fromString(initiateResponse.uploadId),
-            chunkSize = initiateResponse.chunkSize
-        ))
-        while (run.get()) {
-            val status = getUploadStats(initiateResponse.uploadId)
-            uploadOrResumeChunks(
+        val uploadIdAndChunkSize = if (uploadStatus.uploadId != null && uploadStatus.chunkSize != -1) {
+            uploadStatus.uploadId.toString() to uploadStatus.chunkSize
+        } else {
+            val initiateResponse: UploadInitiateResponse = initiateUpload()
+            uploadStatus = repository.saveUploadStatus(uploadStatus.copy(
+                uploadId = UUID.fromString(initiateResponse.uploadId),
                 chunkSize = initiateResponse.chunkSize,
-                uploadedChunks = status.uploadedChunks.toSet()
-            )
+                status = TransferStatus.ACTIVE
+            ))
+            initiateResponse.uploadId to initiateResponse.chunkSize
         }
+
+        val status = getUploadStats(uploadIdAndChunkSize.first)
+        uploadStatus = repository.saveUploadStatus(uploadStatus.copy(
+            uploadedChunks = status.uploadedChunks,
+            uploadedBytes = status.uploadedBytes,
+            status = if (status.uploadStatus == "COMPLETED") TransferStatus.COMPLETED else TransferStatus.ACTIVE
+        ))
+        uploadOrResumeChunks(
+            chunkSize = uploadIdAndChunkSize.second,
+            uploadedChunks = status.uploadedChunks.toSet()
+        )
     }
 
     private fun calculateSpeed(elapsedSeconds: Double, chunkSize: Long): Double {
@@ -122,8 +131,7 @@ class UploadService(
                     uploadStatus.copy(
                         eta = eta, speed = updateSpeedDisplay(speed),
                         uploadedBytes = uploadStatus.uploadedBytes + actualChunk.size.toLong(),
-                        uploadedChunks = uploadStatus.uploadedChunks + chunkIndex,
-                        status = TransferStatus.ACTIVE
+                        uploadedChunks = uploadStatus.uploadedChunks + chunkIndex
                     )
                 )
             }
@@ -133,13 +141,23 @@ class UploadService(
 
         val completeResponse = client.post(completeUrl(uploadStatus.uploadId.toString()))
 
-        if (completeResponse.status == HttpStatusCode.PartialContent) return
-        if (!completeResponse.status.isSuccess()) return
+        if (completeResponse.status == HttpStatusCode.PartialContent) {
+            repository.saveUploadStatus(uploadStatus.copy(status = TransferStatus.FAILED))
+            return
+        }
+        if (!completeResponse.status.isSuccess()) {
+            repository.saveUploadStatus(uploadStatus.copy(status = TransferStatus.FAILED))
+            return
+        }
 
         if (completeResponse.status.isSuccess()) {
             Log.d(TAG("UploadService"), "uploadOrResumeChunks: completeResponse body: ${completeResponse.bodyAsText()}")
-            repository.saveUploadStatus(uploadStatus.copy(status = TransferStatus.COMPLETED))
-            run.set(false)
+            val status = getUploadStats(uploadStatus.uploadId.toString())
+            repository.saveUploadStatus(uploadStatus.copy(
+                uploadedBytes = status.uploadedBytes,
+                uploadedChunks = status.uploadedChunks,
+                status = TransferStatus.COMPLETED
+            ))
         }
     }
 

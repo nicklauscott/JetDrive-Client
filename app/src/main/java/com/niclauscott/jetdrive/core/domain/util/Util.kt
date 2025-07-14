@@ -2,16 +2,14 @@ package com.niclauscott.jetdrive.core.domain.util
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.niclauscott.jetdrive.core.domain.model.UriData
 import java.io.File
-import androidx.core.net.toUri
 
 val TAG: (String) -> String = {
-    "JET_DRIVE_APP -> $it"
+    "JET___DRIVE___APP -> $it"
 }
 
 fun openFileFromCache(context: Context, file: File, mimeType: String) {

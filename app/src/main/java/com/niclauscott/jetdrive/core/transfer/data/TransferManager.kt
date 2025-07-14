@@ -3,37 +3,33 @@ package com.niclauscott.jetdrive.core.transfer.data
 import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
-import com.niclauscott.jetdrive.core.database.data.entities.downloads.DownloadStatus
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.transfer.data.service.DownloadService
 import com.niclauscott.jetdrive.core.transfer.data.service.UploadService
 import com.niclauscott.jetdrive.core.transfer.domain.model.IncompleteTransfer
 import com.niclauscott.jetdrive.core.transfer.domain.model.NotificationProgress
-import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferRepository
+import com.niclauscott.jetdrive.core.transfer.domain.repository.AppTransferRepository
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
 object TransferManager: KoinComponent {
-
     private val baseUrl: String by inject()
     private val context: Context by inject()
     private val client: HttpClient by inject()
-    private val repository: TransferRepository by inject()
+    private val repository: AppTransferRepository by inject()
 
     private val dbScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val progressScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -46,7 +42,12 @@ object TransferManager: KoinComponent {
     fun init() {
         dbScope.launch {
             repository.getAllIncompleteTransfer().collect { list ->
-                //Log.d(TAG("TransferManager"), "init: list: $list")
+                Log.d(TAG("TransferManager"), "init -> list: $list")
+
+                // Cancel inactive transfer job if already launched
+                val inactiveTransfers = activeJobs.filterKeys { !list.map { transfer -> transfer.task.transferId }.contains(it) }
+                inactiveTransfers.forEach { (k, v) -> v.second.cancel(); activeJobs.remove(k) }
+
                 transfers.value = list
 
                 val prioritizedTransfer = list.minByOrNull { it.task.transferQueuePosition }
@@ -87,70 +88,6 @@ object TransferManager: KoinComponent {
                 }
             }
         }
-        progressScope.launch { calculateTransferProgress() }
-    }
-
-    fun init1() {
-        dbScope.launch {
-            repository.getAllIncompleteTransfer().collect { list ->
-                transfers.value = list
-
-                val prioritizedTransfer = list.minByOrNull { it.task.transferQueuePosition }
-                val currentlyRunning = activeJobs.keys
-
-                // Check if a new transfer with higher priority is not running
-                if (prioritizedTransfer != null && !currentlyRunning.contains(prioritizedTransfer.task.transferId)) {
-                    // Cancel current job if it's lower priority
-                    val lowerPriorityJob = activeJobs.entries.find {
-                        val currentTransfer = list.find { t -> t.task.transferId == it.key }
-                        currentTransfer != null &&
-                                currentTransfer.task.transferQueuePosition > prioritizedTransfer.task.transferQueuePosition
-                    }
-
-                    if (lowerPriorityJob != null) {
-                        // Cancel the lower-priority one
-                        lowerPriorityJob.value.second.cancel()
-                        activeJobs.remove(lowerPriorityJob.key)
-
-                        // Restart the higher-priority one
-                        processNextTransfer(prioritizedTransfer.type, list)
-                    } else {
-                        // No preemption needed, process normally
-                        val hasIdleUpload = list.any {
-                            it.type == IncompleteTransfer.TransferType.UPLOAD &&
-                                    !activeJobs.containsKey(it.task.transferId)
-                        }
-                        val hasIdleDownload = list.any {
-                            it.type == IncompleteTransfer.TransferType.DOWNLOAD &&
-                                    !activeJobs.containsKey(it.task.transferId)
-                        }
-
-                        if (hasIdleUpload || hasIdleDownload) {
-                            processNextTransfer(getIdleType(hasIdleUpload, hasIdleDownload), list)
-                        }
-                    }
-                }
-            }
-        } // 2nd version
-        dbScope.launch {
-            repository.getAllIncompleteTransfer().collect { list ->
-                transfers.value = list
-                if (list.isNotEmpty()) {
-                    val hasIdleUpload = list.any {
-                        it.type == IncompleteTransfer.TransferType.UPLOAD &&
-                           !activeJobs.containsKey(it.task.transferId)
-                    }
-                    val hasIdleDownload = list.any {
-                        it.type == IncompleteTransfer.TransferType.DOWNLOAD &&
-                           !activeJobs.containsKey(it.task.transferId)
-                    }
-
-                    if (hasIdleUpload || hasIdleDownload) {
-                        processNextTransfer(getIdleType(hasIdleUpload, hasIdleDownload), list)
-                    }
-                }
-            }
-        } //  1st version
         progressScope.launch { calculateTransferProgress() }
     }
 
@@ -204,6 +141,7 @@ object TransferManager: KoinComponent {
                     uploadService.init()
                 }
             } catch (e: Exception) {
+                Log.d(TAG("TransferManager"), "Upload error: ${e.message}")
                 val uploadStatus = repository.getUploadStatusById(task.task.transferId)
                 uploadStatus?.let { repository.saveUploadStatus(it.copy(status = TransferStatus.FAILED)) }
             } finally {
@@ -225,22 +163,14 @@ object TransferManager: KoinComponent {
                     downloadService.init()
                 }
             } catch (e: Exception) {
-                Log.d(TAG("DownloadService"), "Transfer mng: download error: ${e.message}")
+                Log.d(TAG("DownloadService"), ": download error: ${e.message}")
                 val downloadStatus = repository.getDownloadStatusById(task.task.transferId)
-                downloadStatus?.let {
-                    repository.saveDownloadStatus(it.copy(status = TransferStatus.FAILED))
-                }
+                downloadStatus?.let { repository.saveDownloadStatus(it.copy(status = TransferStatus.FAILED)) }
             } finally {
                 activeJobs.remove(task.task.transferId)
             }
         }
         activeJobs[task.task.transferId] = task.task.transferName to job
-    }
-
-    fun cancelAllTransfer() {
-        progressScope.cancel()
-        dbScope.cancel()
-        activeJobs.values.forEach { it.second.cancel() }
     }
 
     private fun getIdleType(upload: Boolean, download: Boolean): IncompleteTransfer.TransferType  {

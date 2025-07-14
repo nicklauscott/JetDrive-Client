@@ -1,7 +1,7 @@
 package com.niclauscott.jetdrive.core.database.data.converter
 
 import androidx.room.TypeConverter
-import com.niclauscott.jetdrive.core.database.data.entities.TransferStatus
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 
 class Converters {
 
