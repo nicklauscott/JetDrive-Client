@@ -351,10 +351,10 @@ fun PortraitMusicPlayer(
             // progress bar
             Column(
                 modifier = Modifier
-                    .weight(0.5f)
+                    .weight(0.7f)
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Top
             ) {
                 MusicSlider(
                     position = position,
@@ -376,7 +376,7 @@ fun PortraitMusicPlayer(
 
             Row(
                 modifier = Modifier
-                    .weight(0.5f)
+                    .weight(0.3f)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.Center

@@ -37,12 +37,12 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
-import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.FileCopyMoveNodeCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.FileCopyMoveTopBar
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.state.FileCopyMoveScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CompactActionButtonsRow
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CreateNewFolderDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 
 @Composable
@@ -53,14 +53,8 @@ fun FileCopyMoveScreen(
 ) {
     val context = LocalContext.current
     val state = viewModel.state
-
     var showCreateFolderDialog by rememberSaveable { mutableStateOf(false) }
-
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) {
-        viewModel.onEvent(FileCopyMoveScreenUIEvent.RefreshData)
-    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->

@@ -2,11 +2,11 @@ package com.niclauscott.jetdrive.core.splash.data.repository
 
 import androidx.datastore.core.DataStore
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
+import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
 import com.niclauscott.jetdrive.core.splash.domain.model.constant.AuthValidationResponse
 import com.niclauscott.jetdrive.core.splash.domain.model.dto.ValidateTokenRequestDTO
 import com.niclauscott.jetdrive.core.splash.domain.repository.AuthValidationRepository
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
@@ -36,16 +36,13 @@ class AuthValidationRepositoryImpl(
                 setBody(ValidateTokenRequestDTO(access = userPreferences.accessToken ?: ""))
             }
 
-            if (response.status == HttpStatusCode.OK) {
-                return AuthValidationResponse.ValidationSuccessful
-            }
-            else {
+            if (response.status != HttpStatusCode.OK) {
                 return AuthValidationResponse.ValidationFailed
             }
-        } catch (e: ResponseException) {
-            AuthValidationResponse.ValidationFailed
-        } catch (e: Exception) {
-            AuthValidationResponse.NetworkFailed
+
+            AuthValidationResponse.ValidationSuccessful
+        } catch (ex: Throwable) {
+            AuthValidationResponse.NetworkFailed(getNetworkErrorMessage(ex))
         }
     }
 }

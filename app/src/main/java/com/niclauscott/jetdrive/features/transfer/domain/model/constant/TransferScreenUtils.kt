@@ -1,7 +1,7 @@
 package com.niclauscott.jetdrive.features.transfer.domain.model.constant
 
-fun calculateCompletedPercentage(downloadedBytes: Long, totalBytes: Long): Int {
-    val percent = (downloadedBytes.toDouble() / totalBytes .toDouble()) * 100
+fun calculatePercentage(bytes: Long, totalBytes: Long): Int {
+    val percent = (bytes.toDouble() / totalBytes .toDouble()) * 100
     return percent.coerceAtMost(100.0).toInt()
 }
 

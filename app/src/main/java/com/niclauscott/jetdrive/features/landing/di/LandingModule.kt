@@ -5,5 +5,5 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val landingModule = module {
-    viewModel { LandingScreenViewModel() }
+    viewModel { LandingScreenViewModel(get()) }
 }

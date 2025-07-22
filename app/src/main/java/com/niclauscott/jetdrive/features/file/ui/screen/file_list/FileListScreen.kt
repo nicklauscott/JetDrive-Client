@@ -1,6 +1,11 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_list
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,14 +40,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
+import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.domain.util.openFileFromCache
 import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
-import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
-import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewTextFilDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CreateNewFolderDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CreateNewTextFilDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DeleteDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DownloadProgressDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileNodeCell
@@ -54,6 +60,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
+import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
 import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
 import com.niclauscott.jetdrive.features.landing.ui.components.FAB
 import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
@@ -76,6 +83,7 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
     var showCreateTextFileDialog by rememberSaveable { mutableStateOf(false) }
     var showRenameDialog by rememberSaveable { mutableStateOf<FileNode?>(null) }
     var showDeleteDialog by rememberSaveable { mutableStateOf<String?>(null) }
+    var toast by remember { mutableStateOf<Toast?>(null) }
 
     LaunchedEffect(Unit) { viewModel.onEvent(FileScreenUIEvent.RefreshData) }
 
@@ -83,16 +91,31 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
         viewModel.effect.collect { effect ->
             when (effect) {
                 is FileScreenUIEffect.ShowSnackBar -> {
-                    Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
-                    snackbarHostState.showSnackbar(effect.message)
+                    toast?.cancel()
+                    toast = Toast.makeText(context, effect.message, Toast.LENGTH_SHORT)
+                    toast?.show()
                 }
-
                 is FileScreenUIEffect.PreviewFile -> {
                     openFileFromCache(context = context, mimeType = effect.mimeType, file = effect.file)
                 }
             }
         }
     }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(uri, flags)
+                viewModel.onEvent(FileScreenUIEvent.UploadFile(uri.toString()))
+            } catch (e: SecurityException) {
+                Log.e(TAG("HomeScreen"), "Unable to persist URI permission: ${e.message}")
+            }
+        }
+    }
+
 
     if (previewState is FileProgress.Loading) {
         DownloadProgressDialog((previewState as FileProgress.Loading).percent) {
@@ -166,12 +189,9 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
             FAB(
                 showActiveFileOperationFAB = activeTransfer != null,
                 progress = activeTransfer ?: 0f,
-                onClickActiveFileOperationFAB = {},
+                onClickActiveFileOperationFAB = { viewModel.onEvent(FileScreenUIEvent.OpenTransferScreen) },
                 showFileOperationFAB = true
             ) { showFileActionBottomSheet = true }
-        },
-        snackbarHost = {
-            CustomSnackbarHost(modifier = modifier,snackbarHostState = snackbarHostState)
         },
         topBar = {
             FileScreenTopBar(
@@ -192,7 +212,7 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
             ) { fileAction ->
                 when (fileAction) {
                     FileActions.CreateFolder -> showCreateFolderDialog = true
-                    FileActions.UploadFile -> {}
+                    FileActions.UploadFile -> launcher.launch(arrayOf("*/*"))
                 }
                 showFileActionBottomSheet = false
             }
@@ -205,32 +225,12 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                 onDismiss = { showBottomSheet = false }
             ) { action ->
                 when (action) {
-                    Action.Rename -> {
-                        selectedFileNode?.let { showRenameDialog = it }
-                    }
-                    Action.Move -> {
-                        selectedFileNode?.let {
-                            viewModel.onEvent(FileScreenUIEvent.Move(fileNode = it))
-                        }
-                    }
-                    Action.Copy -> {
-                        selectedFileNode?.let {
-                            viewModel.onEvent(FileScreenUIEvent.Copy(fileNode = it))
-                        }
-                    }
-                    Action.Delete -> {
-                        selectedFileNode?.let { showDeleteDialog = it.id }
-                    }
-                    Action.Info -> {
-                        selectedFileNode?.let { fileNode ->
-                            viewModel.onEvent(FileScreenUIEvent.FileDetails(fileNode))
-                        }
-                    }
-                    Action.Download -> {
-                        selectedFileNode?.let { fileNode ->
-                            viewModel.onEvent(FileScreenUIEvent.Download(fileNode))
-                        }
-                    }
+                    Action.Rename -> selectedFileNode?.let { showRenameDialog = it }
+                    Action.Delete ->  selectedFileNode?.let { showDeleteDialog = it.id }
+                    Action.Info -> selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.FileDetails(it)) }
+                    Action.Download -> selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Download(it)) }
+                    Action.Move ->  selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Move(fileNode = it)) }
+                    Action.Copy -> selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Copy(fileNode = it)) }
                 }
                 selectedFileNode = null
             }

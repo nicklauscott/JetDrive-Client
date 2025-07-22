@@ -1,7 +1,18 @@
 package com.niclauscott.jetdrive.core.ui.navigation
 
+import android.widget.Toast
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -23,7 +34,21 @@ fun NavigationRoot(
     modifier: Modifier = Modifier,
     splashScreenViewModel: SplashScreenViewModel
 ) {
+    val context = LocalContext.current
+    var toast by remember { mutableStateOf<Toast?>(null) }
     val startScreen = splashScreenViewModel.screen.value
+
+    LaunchedEffect(Unit) {
+        splashScreenViewModel.effect.collect { effect ->
+            when (effect) {
+                is SplashScreenViewModel.SplashScreenEffect.ShowSnackbar -> {
+                    toast?.cancel()
+                    toast = Toast.makeText(context, effect.message, Toast.LENGTH_SHORT)
+                    toast?.show()
+                }
+            }
+        }
+    }
 
     if (startScreen != null) {
         val backStack = rememberNavBackStack(startScreen)
@@ -36,6 +61,24 @@ fun NavigationRoot(
                 rememberViewModelStoreNavEntryDecorator(),
                 rememberSceneSetupNavEntryDecorator()
             ),
+            transitionSpec = {
+                slideInHorizontally(
+                    initialOffsetX = { fullHeight -> fullHeight  },
+                    animationSpec = tween(300)
+                ) togetherWith slideOutHorizontally(
+                    targetOffsetX = { fullHeight -> fullHeight  },
+                    animationSpec = tween(300)
+                )
+            },
+            popTransitionSpec = {
+                slideInHorizontally(
+                    initialOffsetX = { fullHeight -> fullHeight  },
+                    animationSpec = tween(300)
+                ) togetherWith slideOutHorizontally(
+                    targetOffsetX = { fullHeight -> fullHeight  },
+                    animationSpec = tween(300)
+                )
+            },
             entryProvider = { key ->
                 when (key) {
                     is Login -> {

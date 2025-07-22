@@ -14,7 +14,6 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.state.FileDe
 import com.niclauscott.jetdrive.features.file.ui.screen.file_detail.state.FileDetailScreenUIState
 import com.niclauscott.jetdrive.features.file.ui.navigation.CopyMoveScreen
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -72,7 +71,7 @@ class FileDetailScreenViewModel(
         viewModelScope.launch {
             val response = fileRepository.deleteFileNode(fileId = fileId)
             if (response is FileResponse.Successful) {
-                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+                fileRepository.invalidate(fileNode.parentId ?: "root")
                 backStack.removeAt(backStack.lastIndex)
                 landingScreenViewModel.showBottomBars()
             } else if (response is FileResponse.Failure) {
@@ -86,7 +85,7 @@ class FileDetailScreenViewModel(
             val response = fileRepository.renameFileNode(fileId = fileId, newName = newName)
             if (response is FileResponse.Successful) {
                 _state.value = state.value.copy(fileNode = state.value.fileNode.copy(name = newName))
-                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+                fileRepository.invalidate(fileNode.parentId ?: "root")
             } else if (response is FileResponse.Failure){
                 _effect.emit(FileDetailScreenUIEffect.ShowSnackBar(response.message))
             }

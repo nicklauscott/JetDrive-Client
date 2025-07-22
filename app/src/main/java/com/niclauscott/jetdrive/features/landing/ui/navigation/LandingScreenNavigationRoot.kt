@@ -1,5 +1,11 @@
 package com.niclauscott.jetdrive.features.landing.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -19,9 +25,11 @@ import com.niclauscott.jetdrive.features.profile.ui.ProfileScreen
 import com.niclauscott.jetdrive.features.profile.ui.ProfileScreenViewModel
 import com.niclauscott.jetdrive.features.transfer.ui.TransferScreen
 import com.niclauscott.jetdrive.features.transfer.ui.TransferScreenViewModel
+import kotlinx.coroutines.FlowPreview
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+@OptIn(FlowPreview::class)
 @Composable
 fun LandingScreenNavigationRoot(
     modifier: Modifier = Modifier, backStack: NavBackStack,
@@ -35,6 +43,24 @@ fun LandingScreenNavigationRoot(
             rememberViewModelStoreNavEntryDecorator(),
             rememberSceneSetupNavEntryDecorator()
         ),
+        transitionSpec = {
+            slideInHorizontally(
+                initialOffsetX = { fullHeight -> fullHeight  },
+                animationSpec = tween(300)
+            ) togetherWith slideOutHorizontally(
+                targetOffsetX = { fullHeight -> fullHeight  },
+                animationSpec = tween(300)
+            )
+        },
+        popTransitionSpec = {
+            slideInHorizontally(
+                initialOffsetX = { fullHeight -> fullHeight  },
+                animationSpec = tween(300)
+            ) togetherWith slideOutHorizontally(
+                targetOffsetX = { fullHeight -> fullHeight  },
+                animationSpec = tween(300)
+            )
+        },
         entryProvider = { key ->
             when (key) {
                 is HomeScreen -> {

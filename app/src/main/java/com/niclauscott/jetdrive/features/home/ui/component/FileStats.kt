@@ -14,19 +14,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +54,7 @@ import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.domain.model.UserFileStats
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
+import com.niclauscott.jetdrive.features.transfer.domain.model.constant.calculatePercentage
 
 @Composable
 fun MinimalStatsCard(stats: UserFileStats) {
@@ -172,6 +176,8 @@ fun MinimalStatsCard(stats: UserFileStats) {
 @Composable
 fun StatsCard(stats: UserFileStats) {
     val context = LocalContext.current
+    val percentage = calculatePercentage(stats.totalStorageUsed, stats.totalStorageSize)
+    val percentageFloat = percentage / 100f
     Card(
         modifier = Modifier
             .fillMaxSize()
@@ -185,7 +191,6 @@ fun StatsCard(stats: UserFileStats) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-               // .verticalScroll(scrollState)
                 .padding(20.dp)
         ) {
             // Header with icon
@@ -201,11 +206,17 @@ fun StatsCard(stats: UserFileStats) {
                     fontWeight = FontWeight.Bold
                 )
 
-                StorageProgress(
-                    modifier = Modifier,
-                    totalSize = stats.totalStorageSize,
-                    usedSize = stats.totalStorageUsed
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        progress = { percentageFloat }, gapSize = (-15).dp, strokeWidth = 1.5.dp, modifier = Modifier
+                    )
+                    Text(
+                        text = "${percentage}%",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -304,7 +315,7 @@ fun StatsCard(stats: UserFileStats) {
                     modifier = Modifier.weight(0.5f),
                     label = "Total Files",
                     value = stats.totalFile.toString(),
-                    icon = Icons.Default.InsertDriveFile
+                    icon = Icons.AutoMirrored.Filled.InsertDriveFile
                 )
 
                 MetricCard(
@@ -382,9 +393,10 @@ fun StorageProgress(
     modifier: Modifier = Modifier,
     totalSize: Long, usedSize: Long
 ) {
-    val percentage = if (totalSize == 0L) 0f else (usedSize.toFloat() / totalSize) * 100f
     val backgroundColor = MaterialTheme.colorScheme.primaryContainer
     val color = MaterialTheme.colorScheme.onPrimaryContainer
+    val percentage = calculatePercentage(usedSize, totalSize)
+    val percentageFloat = percentage / 100f
     Box(
         modifier = modifier
             .padding(5.dp)
@@ -409,7 +421,7 @@ fun StorageProgress(
                 drawArc(
                     color = color,
                     startAngle = -90f,
-                    sweepAngle = percentage,
+                    sweepAngle = percentageFloat,
                     useCenter = false,
                     topLeft = topLeft,
                     size = arcSize,
@@ -422,7 +434,7 @@ fun StorageProgress(
     ) {
         Box(modifier = Modifier.padding(3.dp), contentAlignment = Alignment.Center) {
             Text(
-                text = "${percentage.toInt()}%",
+                text = "${percentage}%",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )

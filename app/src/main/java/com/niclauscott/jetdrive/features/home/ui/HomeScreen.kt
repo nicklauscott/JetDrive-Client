@@ -11,17 +11,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,22 +36,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.ui.util.DeviceConfiguration
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
-import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
-import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.CreateNewFolderDialog
-import com.niclauscott.jetdrive.features.home.ui.component.HomeFileNodeCellCard
-import com.niclauscott.jetdrive.features.home.ui.component.MinimalStatsCard
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CreateNewFolderDialog
+import com.niclauscott.jetdrive.features.home.ui.component.HomeScreenLandscape
+import com.niclauscott.jetdrive.features.home.ui.component.HomeScreenPortrait
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
 import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
 import com.niclauscott.jetdrive.features.landing.ui.components.FAB
 import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
+import kotlinx.coroutines.FlowPreview
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
 
@@ -89,6 +91,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
+        contentWindowInsets = WindowInsets.statusBars,
         floatingActionButton = {
             FAB(
                 showActiveFileOperationFAB = activeTransfer != null,
@@ -100,7 +103,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
     ) { paddingValues ->
         val innerModifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
+            .consumeWindowInsets(WindowInsets.navigationBars)
 
         if (showBottomSheet) {
             ActionsBottomSheet(
@@ -110,9 +113,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
             ) { fileAction ->
                 when (fileAction) {
                     FileActions.CreateFolder -> showCreateFolderDialog = true
-                    FileActions.UploadFile -> {
-                        launcher.launch(arrayOf("*/*"))
-                    }
+                    FileActions.UploadFile -> launcher.launch(arrayOf("*/*"))
                 }
                 showBottomSheet = false
             }
@@ -154,39 +155,32 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
             }
 
             else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = paddingValues.calculateTopPadding())
-                        .padding(horizontal = 2.percentOfScreenWidth())
-                ) {
 
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        state.value.data?.let { MinimalStatsCard(stats = it) }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = getString(context, R.string.recent_files),
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+                val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
 
-                    val recentFiles = state.value.data?.recentFiles ?: emptyList()
-                    items(recentFiles) {
-                        HomeFileNodeCellCard(fileNode = it) {
+                when (deviceConfiguration) {
+                    DeviceConfiguration.MOBILE_PORTRAIT -> {
+                        HomeScreenPortrait(
+                            modifier = innerModifier, state = state.value, paddingValues = paddingValues
+                        ) {
                             viewModel.onEvent(HomeScreenUIEvent.OpenFileNode(it))
-
                         }
                     }
+                    else -> {
+                        HomeScreenLandscape(
+                            modifier = innerModifier, state = state.value, paddingValues = paddingValues
+                        ) {
+                            viewModel.onEvent(HomeScreenUIEvent.OpenFileNode(it))
+                        }
 
-                    item { Box(modifier = Modifier.padding(bottom = 1.percentOfScreenHeight())) }
-
+                    }
                 }
-            }
 
+            }
         }
 
     }
 }
+
+

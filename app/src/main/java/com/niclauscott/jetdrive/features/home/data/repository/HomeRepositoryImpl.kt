@@ -5,13 +5,17 @@ import com.niclauscott.jetdrive.core.database.data.dao.TransferDao
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
 import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.domain.dto.UserFileStatsResponseDTO
-import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
-import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateRequestDTO
-import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
-import com.niclauscott.jetdrive.core.domain.model.UserFileStats
 import com.niclauscott.jetdrive.core.domain.mapper.toUserFileStats
+import com.niclauscott.jetdrive.core.domain.model.UserFileStats
 import com.niclauscott.jetdrive.core.domain.util.getFileInfo
+import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
+import com.niclauscott.jetdrive.core.sync.data.repository.FileSyncRepository
 import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferServiceController
+import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateRequestDTO
+import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeDTO
+import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
+import com.niclauscott.jetdrive.features.file.domain.mapper.toFileNode
+import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.home.domain.repository.HomeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -31,6 +35,7 @@ class HomeRepositoryImpl(
     private val client: HttpClient,
     private val dao: TransferDao,
     private val context: Context,
+    private val syncRepository: FileSyncRepository,
     private val serviceController: TransferServiceController
 ): HomeRepository {
 
@@ -52,14 +57,13 @@ class HomeRepositoryImpl(
             }
 
             val result = response.body<UserFileStatsResponseDTO>().toUserFileStats()
-
             FileResponse.Successful(result)
         } catch (ex: Throwable) {
             FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
-    override suspend fun createFolder(name: String): FileResponse<Unit> {
+    override suspend fun createFolder(name: String): FileResponse<FileNode> {
         return try {
             val response = client.request("$fileUrl/create") {
                 method = HttpMethod.Post
@@ -75,7 +79,8 @@ class HomeRepositoryImpl(
                 return FileResponse.Failure(error.message)
             }
 
-             FileResponse.Successful(Unit)
+            val result = response.body<FileNodeDTO>().toFileNode()
+             FileResponse.Successful(result)
         } catch (ex: Throwable) {
             FileResponse.Failure(getNetworkErrorMessage(ex))
         }
@@ -117,6 +122,10 @@ class HomeRepositoryImpl(
         )
         dao.saveUploadStatus(uploadStatus)
         serviceController.ensureServiceRunning()
+    }
+
+    override fun invalidate(folderId: String) {
+        syncRepository.invalidate(folderId)
     }
 
 }

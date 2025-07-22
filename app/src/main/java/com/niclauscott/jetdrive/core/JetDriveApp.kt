@@ -8,6 +8,7 @@ import com.niclauscott.jetdrive.core.datastore.di.dataStoreModule
 import com.niclauscott.jetdrive.core.http_client.di.httpClientModule
 import com.niclauscott.jetdrive.features.auth.di.authModule
 import com.niclauscott.jetdrive.core.splash.di.splashModule
+import com.niclauscott.jetdrive.core.sync.di.syncModule
 import com.niclauscott.jetdrive.core.transfer.di.appTransferModule
 import com.niclauscott.jetdrive.features.auth.google.di.googleAuthModule
 import com.niclauscott.jetdrive.features.file.di.fileModule
@@ -40,7 +41,7 @@ class JetDriveApp: Application(), KoinStartup, Configuration.Provider {
             inMemoryCacheModule, splashModule, authModule,
             googleAuthModule, landingModule, fileModule,
             homeModule, profileModule, appTransferModule,
-            transferModule
+            transferModule, syncModule
         )
     }
 }

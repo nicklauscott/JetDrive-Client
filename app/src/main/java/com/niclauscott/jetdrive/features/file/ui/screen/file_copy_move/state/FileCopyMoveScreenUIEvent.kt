@@ -12,5 +12,4 @@ sealed interface FileCopyMoveScreenUIEvent {
     data object Complete: FileCopyMoveScreenUIEvent
     data object GoBack: FileCopyMoveScreenUIEvent
     data object Cancel: FileCopyMoveScreenUIEvent
-    data object RefreshData: FileCopyMoveScreenUIEvent
 }

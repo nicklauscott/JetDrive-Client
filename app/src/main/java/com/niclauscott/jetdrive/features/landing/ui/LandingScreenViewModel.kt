@@ -6,13 +6,14 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.navigation3.runtime.NavBackStack
+import com.niclauscott.jetdrive.core.sync.domain.service.FileSyncService
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.ui.navigation.FileListScreen
 import com.niclauscott.jetdrive.features.landing.ui.state.LandingScreenUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class LandingScreenViewModel: ViewModel() {
+class LandingScreenViewModel(syncService: FileSyncService): ViewModel() {
 
     private val _state: MutableState<LandingScreenUiState> = mutableStateOf(LandingScreenUiState())
     val state: State<LandingScreenUiState> = _state
@@ -38,6 +39,7 @@ class LandingScreenViewModel: ViewModel() {
     val profileScreenBackStack = NavBackStack()
 
     init {
+        syncService.start()
         fileScreenBackStack.add(FileListScreen(FileNode()))
     }
 

@@ -11,6 +11,7 @@ import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.domain.util.getFileInfo
 import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
+import com.niclauscott.jetdrive.core.sync.data.repository.FileSyncRepository
 import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferServiceController
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCopyRequestDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeCreateRequestDTO
@@ -22,6 +23,7 @@ import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 import com.niclauscott.jetdrive.features.file.domain.mapper.toFileNode
 import com.niclauscott.jetdrive.features.file.domain.repository.FileRepository
+import com.niclauscott.jetdrive.features.profile.domain.constant.ProfileResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.ConnectTimeoutException
@@ -42,55 +44,18 @@ class FileRepositoryImpl(
     private val baseUrl: String,
     private val client: HttpClient,
     private val dao: TransferDao,
-    private val cache: InMemoryCache<String, CachedEntry>,
     private val context: Context,
+    private val syncRepository: FileSyncRepository,
     private val serviceController: TransferServiceController
 ): FileRepository {
-
     private val fileUrl = "$baseUrl/files"
 
-    override suspend fun getRootFiles(useCache: Boolean): FileResponse<List<FileNode>> {
-        return try {
-            val now = System.currentTimeMillis()
-            val cached = getCachedRootFiles()
-
-            if (useCache) {
-                if (cached.isNotEmpty() && now - cached.first().cachedAt <= 2 * 60 * 1000) {
-                    return FileResponse.Successful(cached.map { it.data })
-                }
-            }
-
-            val response = client.request(fileUrl) {
-                method = HttpMethod.Get
-                headers {
-                    append(HttpHeaders.Accept, ContentType.Application.Json.toString())
-                    append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                }
-            }
-
-            if (response.status != HttpStatusCode.OK) {
-                val error = response.body<ErrorMessageDTO>()
-                return FileResponse.Failure(error.message)
-            }
-
-            val result = response.body<FileNodeTreeResponse>()
-
-            val fileNodes = result.children.map { it.toFileNode() }
-            fileNodes.forEach {
-                cache.put(it.id, CachedEntry(
-                it, cachedAt = now,
-                    updatedAt = result.updatedAt ?: LocalDateTime.now()))
-            }
-
-            FileResponse.Successful(fileNodes)
-        } catch (ex: Throwable) {
-            FileResponse.Failure(getNetworkErrorMessage(ex))
-        }
+    override suspend fun getRootFiles(): FileResponse<List<FileNode>> {
+        return syncRepository.getFolder(null)
     }
 
     override suspend fun search(searchQuery: String): FileResponse<List<FileNode>> {
         return try {
-            Log.d(TAG("FileRepositoryImpl"), "search searchQuery: $searchQuery")
             val response = client.request("$fileUrl/search/$searchQuery") {
                 method = HttpMethod.Get
                 headers {
@@ -101,72 +66,31 @@ class FileRepositoryImpl(
 
             if (response.status != HttpStatusCode.OK) {
                 val error = response.body<ErrorMessageDTO>()
-                Log.d(TAG("FileRepositoryImpl"), "search error: $error")
                 return FileResponse.Failure(error.message)
             }
 
             val result = response.body<FileNodeTreeResponse>()
-            Log.d(TAG("FileRepositoryImpl"), "search: $result")
-
             val fileNodes = result.children.map { it.toFileNode() }
             FileResponse.Successful(fileNodes)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
+        } catch (ex: Throwable) {
+            FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
-    override suspend fun getChildren(
-        parentId: String, ifUpdatedSince: LocalDateTime?, useCache: Boolean
-    ): FileResponse<List<FileNode>> {
-        return try {
-            val now = System.currentTimeMillis()
+    override suspend fun getChildren(parentId: String): FileResponse<List<FileNode>> {
+        return syncRepository.getFolder(parentId)
+    }
 
-            if (useCache) {
-                val cached = getCachedChildren(parentId)
-                if (cached.isNotEmpty() && cached.any { now - it.cachedAt <= 2 * 60 * 1000 }) {
-                    return FileResponse.Successful(cached.map { it.data })
-                }
-            }
+    override fun invalidate(folderId: String) {
+        syncRepository.invalidate(folderId)
+    }
 
-            val response = client.request("$fileUrl/$parentId/children") {
-                method = HttpMethod.Get
-                headers {
-                    append(HttpHeaders.Accept, ContentType.Application.Json.toString())
-                    append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                }
-                if (ifUpdatedSince != null) {
-                    parameters { append("ifUpdatedSince", ifUpdatedSince.toString()) }
-                }
-            }
-
-            if (response.status != HttpStatusCode.OK) {
-                val error = response.body<ErrorMessageDTO>()
-                return FileResponse.Failure(error.message)
-            }
-
-            val result = response.body<FileNodeTreeResponse>()
-
-            val fileNodes = result.children.map { it.toFileNode() }
-            fileNodes.forEach {
-                cache.put(it.id, CachedEntry(
-                    it, cachedAt = now,
-                    updatedAt = result.updatedAt ?: LocalDateTime.now()))
-            }
-
-            FileResponse.Successful(fileNodes)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. Check your internet connection")
-        }
+    override fun subScribe(folderId: String, onUpdate: (List<FileNode>) -> Unit) {
+        syncRepository.subScribe(folderId, onUpdate)
     }
 
     override suspend fun createFolder(name: String, parentId: String?): FileResponse<FileNode> {
        return try {
-           val now = System.currentTimeMillis()
-
            val response = client.request("$fileUrl/create") {
                method = HttpMethod.Post
                headers {
@@ -183,18 +107,9 @@ class FileRepositoryImpl(
 
            val result = response.body<FileNodeDTO>()
            val fileNode = result.toFileNode()
-
-           cache.put(fileNode.id, CachedEntry(
-               fileNode, cachedAt = now,
-               updatedAt = LocalDateTime.now())
-           )
-
            FileResponse.Successful(fileNode)
-       } catch (ex: ConnectTimeoutException) {
-           FileResponse.Failure("Connection timeout. Try again")
-       } catch (ex: Exception) {
-           //FileResponse.Failure("Newtwork. Check your error. internet connection")
-           FileResponse.Failure("${ex.message}")
+       } catch (ex: Throwable) {
+           FileResponse.Failure(getNetworkErrorMessage(ex))
        }
     }
 
@@ -214,19 +129,14 @@ class FileRepositoryImpl(
                 return FileResponse.Failure(error.message)
             }
 
-            cache.remove(fileId)
             FileResponse.Successful(Unit)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. internet connection")
+        } catch (ex: Throwable) {
+            FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
     override suspend fun copyFileNode(fileId: String, parentId: String?): FileResponse<FileNode>  {
         return try {
-            val now = System.currentTimeMillis()
-
             val response = client.request("$fileUrl/copy") {
                 method = HttpMethod.Patch
                 headers {
@@ -243,24 +153,14 @@ class FileRepositoryImpl(
 
             val result = response.body<FileNodeDTO>()
             val fileNode = result.toFileNode()
-
-            cache.put(fileNode.id, CachedEntry(
-                fileNode, cachedAt = now,
-                updatedAt = LocalDateTime.now())
-            )
-
             FileResponse.Successful(fileNode)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. internet connection")
+        } catch (ex: Throwable) {
+            FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
     override suspend fun moveFileNode(fileId: String, newParentId: String?): FileResponse<FileNode>  {
         return try {
-            val now = System.currentTimeMillis()
-
             val response = client.request("$fileUrl/move") {
                 method = HttpMethod.Patch
                 headers {
@@ -277,17 +177,9 @@ class FileRepositoryImpl(
 
             val result = response.body<FileNodeDTO>()
             val fileNode = result.toFileNode()
-
-            cache.put(fileNode.id, CachedEntry(
-                fileNode, cachedAt = now,
-                updatedAt = LocalDateTime.now())
-            )
-
             FileResponse.Successful(fileNode)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. internet connection")
+        } catch (ex: Throwable) {
+            FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
@@ -302,13 +194,9 @@ class FileRepositoryImpl(
                 return FileResponse.Failure(error.message)
             }
 
-            cache.remove(fileId)
-
             FileResponse.Successful(Unit)
-        } catch (ex: ConnectTimeoutException) {
-            FileResponse.Failure("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            FileResponse.Failure("Newtwork. Check your error. internet connection")
+        } catch (ex: Throwable) {
+            FileResponse.Failure(getNetworkErrorMessage(ex))
         }
     }
 
@@ -335,7 +223,7 @@ class FileRepositoryImpl(
         }
     }
 
-    override suspend fun upload(uri: String) {
+    override suspend fun upload(uri: String, parentId: String?) {
         val uriData = getFileInfo(uri, context)
         val maxQueuePosition = dao.getUploadMaxQueuePosition() ?: 0
         val uploadStatus = UploadStatus(
@@ -343,6 +231,7 @@ class FileRepositoryImpl(
             uri = uri,
             fileName = uriData?.fileName ?: "Unknown file",
             totalBytes = uriData?.fileSize ?: -1L,
+            parentId = parentId,
             queuePosition = maxQueuePosition + 1
         )
         dao.saveUploadStatus(uploadStatus)
@@ -359,17 +248,6 @@ class FileRepositoryImpl(
             queuePosition = maxQueuePosition + 1
         )
         dao.saveDownloadStatus(downloadStatus)
-        Log.d(TAG("FileRepositoryImpl"), "download: fileNode: $fileNode")
         serviceController.ensureServiceRunning()
-    }
-
-    private fun getCachedRootFiles(): List<CachedEntry> {
-        return  cache.snapShot()
-            .values.filter { it.data.parentId == null }
-    }
-
-    private fun getCachedChildren(parentID: String): List<CachedEntry> {
-        return cache.snapShot()
-            .values.filter { it.data.parentId == parentID }
     }
 }

@@ -3,6 +3,7 @@ package com.niclauscott.jetdrive.features.transfer.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.domain.constant.TransferType
 import com.niclauscott.jetdrive.core.database.domain.model.Download
 import com.niclauscott.jetdrive.core.database.domain.model.Upload

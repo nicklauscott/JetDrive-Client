@@ -42,7 +42,7 @@ fun getNetworkErrorMessage(e: Throwable): String {
         is io.ktor.client.plugins.ResponseException ->
             "Unexpected response: ${e.response.status.description}"
         is java.net.UnknownHostException -> "No internet connection. Please check your network."
-        is java.net.SocketException -> "Network error occurred."
+        is java.net.SocketException -> "Network error."
         else -> "Something went wrong. Please try again."
     }
 }

@@ -59,7 +59,7 @@ import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.domain.constant.TransferType
 import com.niclauscott.jetdrive.core.database.domain.model.Upload
 import com.niclauscott.jetdrive.features.file.domain.util.getFileIconFromFileName
-import com.niclauscott.jetdrive.features.transfer.domain.model.constant.calculateCompletedPercentage
+import com.niclauscott.jetdrive.features.transfer.domain.model.constant.calculatePercentage
 import com.niclauscott.jetdrive.features.transfer.domain.model.constant.formatEta
 import com.niclauscott.jetdrive.features.transfer.ui.component.StatusIndicator
 import sh.calvin.reorderable.ReorderableItem
@@ -101,7 +101,7 @@ fun UploadScreen(
     ) {
         items(items, key = { it.id.toString() }) { upload ->
             val fileIcon by remember { mutableIntStateOf(getFileIconFromFileName(upload.fileName)) }
-            val progress = calculateCompletedPercentage(upload.uploadedBytes, upload.totalBytes)
+            val progress = calculatePercentage(upload.uploadedBytes, upload.totalBytes)
             val progressFloat = progress / 100f
 
             ReorderableItem(reorderableLazyListState, key = upload.id.toString()) { isDragging ->

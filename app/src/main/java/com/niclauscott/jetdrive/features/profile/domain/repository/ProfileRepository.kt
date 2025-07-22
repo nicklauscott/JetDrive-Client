@@ -8,5 +8,5 @@ interface ProfileRepository {
     suspend fun getProfile(): ProfileResponse<User>
     suspend fun getFileStats(): ProfileResponse<UserFileStats>
     suspend fun updateProfileName(firstName: String, lastName: String): ProfileResponse<User>
-    suspend fun uploadProfilePhoto(): ProfileResponse<User>
+    suspend fun uploadProfilePhoto(uri: String): ProfileResponse<User>
 }

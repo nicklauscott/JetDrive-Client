@@ -59,7 +59,7 @@ import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.domain.constant.TransferType
 import com.niclauscott.jetdrive.core.database.domain.model.Download
 import com.niclauscott.jetdrive.features.file.domain.util.getFileIcon
-import com.niclauscott.jetdrive.features.transfer.domain.model.constant.calculateCompletedPercentage
+import com.niclauscott.jetdrive.features.transfer.domain.model.constant.calculatePercentage
 import com.niclauscott.jetdrive.features.transfer.domain.model.constant.formatEta
 import com.niclauscott.jetdrive.features.transfer.ui.component.StatusIndicator
 import sh.calvin.reorderable.ReorderableItem
@@ -101,7 +101,7 @@ fun DownloadScreen(
     ) {
         items(items, key = { it.id.toString() }) { download ->
             val fileIcon by remember { mutableIntStateOf(getFileIcon(download.mimeType)) }
-            val progress = calculateCompletedPercentage(download.downloadedBytes, download.fileSize)
+            val progress = calculatePercentage(download.downloadedBytes, download.fileSize)
             val progressFloat = progress / 100f
 
             ReorderableItem(reorderableLazyListState, key = download.id.toString()) { isDragging ->
@@ -232,9 +232,8 @@ fun DownloadScreen(
                                         .size(40.dp)
                                         .draggableHandle(
                                             onDragStarted = {
-                                                hapticFeedback.performHapticFeedback(
-                                                    HapticFeedbackType.GestureThresholdActivate
-                                                )
+                                                hapticFeedback
+                                                    .performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                                             },
                                             onDragStopped = {
                                                 hapticFeedback.performHapticFeedback(

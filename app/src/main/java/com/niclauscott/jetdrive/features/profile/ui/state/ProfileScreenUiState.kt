@@ -13,4 +13,5 @@ data class ProfileScreenUiState(
     val statsData: UserFileStats? = null,
 
     val isProfileUpdating: Boolean = false,
+    val isProfilePictureUpdating: Boolean = false,
 )

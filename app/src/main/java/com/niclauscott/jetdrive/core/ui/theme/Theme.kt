@@ -25,6 +25,7 @@ private val DarkColorScheme = darkColorScheme(
     onErrorContainer = Color(0xFFFFBDBD)
 )
 
+/*
 val LightColorScheme = lightColorScheme(
     background = Color(0xFFF2F4F7),
     inverseSurface = Color(0xFFE4E6EB),
@@ -38,6 +39,8 @@ val LightColorScheme = lightColorScheme(
     errorContainer = Color(0xFFFFE8E8),
     onErrorContainer = Color(0xFF4C1C1C)
 )
+
+ */
 
 /* Original
 private val DarkColorScheme = darkColorScheme(
@@ -53,6 +56,7 @@ private val DarkColorScheme = darkColorScheme(
     errorContainer = Color(0xFF424447),
     onErrorContainer = Color(0xFFF6F6F7)
 )
+*/
 
 val LightColorScheme = lightColorScheme(
     background = Color(0xFFDCDCDC),
@@ -68,7 +72,7 @@ val LightColorScheme = lightColorScheme(
     onErrorContainer = Color(0xFF0C0C0C)
 )
 
- */
+//*/
 
 @Composable
 fun JetDriveTheme(

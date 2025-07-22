@@ -14,13 +14,13 @@ import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
 import com.niclauscott.jetdrive.core.domain.dto.TokenPairResponseDTO
 import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
 import com.niclauscott.jetdrive.features.auth.domain.exception.OAuthClientException
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.repository.OAuthClient
 import com.niclauscott.jetdrive.features.auth.google.dto.GoogleLoginRequestDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
@@ -48,15 +48,13 @@ class GoogleAuth(
         )
     }
 
-    override suspend fun login(
-        context: Context, jetDriveLogin: () -> Unit
-    ): AuthResponse {
+    override suspend fun login(context: Context, jetDriveLogin: () -> Unit): AuthResponse {
         val idToken = try {
              getGoogleId(context)
         } catch (ex: OAuthClientException) {
             return AuthResponse.LoginFailed(ex.message)
         } catch (ex: Exception) {
-            return AuthResponse.LoginFailed("Google SignIn Failed. Check your internet connection")
+            return AuthResponse.LoginFailed("Network error occurred.")
         }
 
         jetDriveLogin()
@@ -68,7 +66,7 @@ class GoogleAuth(
             val credentialManager = CredentialManager.create(context)
             val result = credentialManager.getCredential(context, request(context))
             val googleCredential = result.credential as? GoogleIdTokenCredential
-            googleCredential?.idToken ?: throw OAuthClientException("Error login in with google: ")
+            googleCredential?.idToken ?: throw OAuthClientException("Error login in with google.")
         } catch (ex: Exception) {
             when (ex) {
                 is GetCredentialCancellationException -> {
@@ -78,7 +76,7 @@ class GoogleAuth(
                     throw OAuthClientException(null)
                 }
                 else -> {
-                    throw OAuthClientException("Check your internet connection")
+                    throw OAuthClientException("Network error occurred.")
                 }
             }
         }
@@ -111,10 +109,8 @@ class GoogleAuth(
                 else -> "Login failed with status ${statusCode.value}"
             }
             AuthResponse.LoginFailed(errorMessage)
-        } catch (ex: ConnectTimeoutException) {
-            AuthResponse.LoginFailed("Connection timeout. Try again")
-        } catch (ex: Exception) {
-            AuthResponse.LoginFailed("Google SignIn Failed. Check your internet connection")
+        } catch (ex: Throwable) {
+            AuthResponse.LoginFailed(getNetworkErrorMessage(ex))
         }
     }
 

@@ -23,16 +23,11 @@ import org.koin.dsl.module
 val httpClientModule = module {
 
     factory<String> {
-        //"http://localhost:8080"
-        //"http://192.168.107.127:8080"
-
-        val baseUrl = if ((1..10).random() % 2 == 0) "http://localhost:9001"
-        else "http://127.0.0.1:9001"
+        val baseUrl = if ((1..10).random() % 2 == 0) "http://localhost:8001"
+        else "http://127.0.0.1:8001"
         //baseUrl
 
-        "http://192.168.193.127:8001"
-        //"http://localhost:8080"
-        //"http://10.0.2.2:9001"
+        "http://192.168.4.3:8001"
     }
 
     single<TokenStorage> { DataStoreTokenStorage(get()) }
@@ -61,11 +56,6 @@ val httpClientModule = module {
                     isLenient = true
                 })
             }
-
-            install(Logging) {
-                level = LogLevel.ALL
-                logger = Logger.SIMPLE
-            }
         }
     }
 
@@ -84,7 +74,7 @@ val httpClientModule = module {
             }
 
             install(Logging) {
-                level = LogLevel.HEADERS
+                level = LogLevel.NONE
                 logger = Logger.SIMPLE
             }
         }

@@ -6,21 +6,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
+import com.niclauscott.jetdrive.core.sync.domain.service.FileEventManager
+import com.niclauscott.jetdrive.core.sync.domain.service.FileSystemEvent
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.ui.navigation.PreviewScreen
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
 import com.niclauscott.jetdrive.features.home.domain.repository.HomeRepository
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEffect
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUiState
 import com.niclauscott.jetdrive.features.landing.ui.navigation.Transfer
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@FlowPreview
 class HomeScreenViewModel(
     private val backStack: NavBackStack,
     private val repository: HomeRepository
@@ -40,7 +46,14 @@ class HomeScreenViewModel(
             0f
         )
 
-    init { loadData() }
+    init {
+        loadData()
+
+        FileEventManager.event
+            .debounce(500)
+            .onEach { updateData() }
+            .launchIn(viewModelScope)
+    }
 
     fun onEvent(event: HomeScreenUIEvent) {
         when (event) {
@@ -54,6 +67,8 @@ class HomeScreenViewModel(
     private fun uploadFile(uri: String) {
         viewModelScope.launch {
             repository.upload(uri)
+            FileEventManager.emit(FileSystemEvent.FileCreated(null, null))
+            repository.invalidate("root")
         }
     }
 
@@ -61,8 +76,8 @@ class HomeScreenViewModel(
         viewModelScope.launch {
             val response = repository.createFolder(name = folderName)
             if (response is FileResponse.Successful) {
-                FileListViewModelRefreshRegistry.markForRefresh("-1")
-                loadData()
+                FileEventManager.emit(FileSystemEvent.FileCreated(response.data, null))
+                repository.invalidate("root")
             } else if (response is FileResponse.Failure) {
                 _effect.emit(HomeScreenUIEffect.ShowSnackBar(response.message))
             }
@@ -81,6 +96,13 @@ class HomeScreenViewModel(
             if (response is FileResponse.Successful) {
                 _state.value = state.value.copy(isLoading = false, data = response.data)
             }
+        }
+    }
+
+    private suspend fun updateData() {
+        val response = repository.getStats()
+        if (response is FileResponse.Successful) {
+            _state.value = state.value.copy(isLoading = false, data = response.data)
         }
     }
 

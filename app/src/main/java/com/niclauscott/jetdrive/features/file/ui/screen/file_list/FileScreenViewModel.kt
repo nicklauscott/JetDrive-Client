@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
+import com.niclauscott.jetdrive.core.sync.domain.service.FileEventManager
+import com.niclauscott.jetdrive.core.sync.domain.service.FileSystemEvent
 import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
 import com.niclauscott.jetdrive.features.file.domain.constant.FileResponse
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
@@ -17,9 +19,7 @@ import com.niclauscott.jetdrive.features.file.ui.navigation.DetailScreen
 import com.niclauscott.jetdrive.features.file.ui.navigation.FileListScreen
 import com.niclauscott.jetdrive.features.file.ui.navigation.PreviewScreen
 import com.niclauscott.jetdrive.features.file.ui.navigation.SearchScreen
-import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.CopyMoveViewModelRefreshRegistry
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
-import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileListViewModelRefreshRegistry
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUiState
@@ -33,6 +33,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,6 +50,7 @@ class FileScreenViewModel(
 ): ViewModel() {
 
     private var downloadJob: Job? = null
+    private val syncFolderId = if (fileNode.id == "-1") "root" else fileNode.id
 
     private val _state: MutableState<FileScreenUiState> = mutableStateOf(FileScreenUiState(
         parentId = if (fileNode.id == "-1") null else fileNode.id, title = fileNode.name
@@ -58,7 +62,7 @@ class FileScreenViewModel(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            0f
+            null
         )
 
     private val _effect: MutableSharedFlow<FileScreenUIEffect> = MutableSharedFlow()
@@ -69,7 +73,84 @@ class FileScreenViewModel(
     var mimeType = ""
 
 
-    init { loadContent() }
+    init {
+        loadContents()
+
+        repository.subScribe(syncFolderId) { files ->
+            _state.value = state.value.copy(
+                children = files.sortedByDescending { it.type.toString() }
+            )
+        }
+
+        FileEventManager.event
+            .filter { it isRelevantTo syncFolderId }
+            .onEach { handleEvent(it, syncFolderId) }
+            .launchIn(viewModelScope)
+
+    }
+
+    private fun handleEvent(event: FileSystemEvent, folderId: String) {
+        val rootFolder = if (folderId == "root") null else fileNode.id
+        when (event) {
+            is FileSystemEvent.FileCopied -> {
+                if (event.newParentId == rootFolder)
+                    _state.value = state.value.copy(children = state.value.children + event.fileNode)
+            }
+            is FileSystemEvent.FileCreated -> {
+                if (event.parentId == rootFolder)
+                    event.fileNode?.let { _state.value = state.value.copy(children = state.value.children + it) }
+            }
+            is FileSystemEvent.FileDelete -> {
+                _state.value = state.value.copy(
+                    children = state.value.children.filterNot { it.id == event.fileNode.id })
+            }
+            is FileSystemEvent.FileModified -> {
+                _state.value = state.value.copy(
+                    children = state.value.children.map {
+                        if (it.id == event.fileNode.id) event.fileNode else it
+                    }
+                )
+            }
+            is FileSystemEvent.FileMoved -> {
+                if (event.newParentId == rootFolder)
+                    _state.value = state.value.copy(children = state.value.children + event.fileNode)
+                if (event.oldParentId == rootFolder)
+                    _state.value = state.value.copy(
+                        children = state.value.children.filterNot { it.id == event.fileNode.id })
+            }
+        }
+    }
+
+    private infix fun FileSystemEvent.isRelevantTo(folderId: String): Boolean {
+        val rootFolder = if (folderId == "root") null else fileNode.id
+        return when(this) {
+            is FileSystemEvent.FileCopied -> this.newParentId == rootFolder
+            is FileSystemEvent.FileCreated -> this.parentId == rootFolder
+            is FileSystemEvent.FileDelete -> this.parentId == rootFolder
+            is FileSystemEvent.FileModified -> this.parentId == rootFolder
+            is FileSystemEvent.FileMoved -> this.newParentId == rootFolder || this.oldParentId == rootFolder
+        }
+    }
+
+    private fun loadContents() {
+        viewModelScope.launch {
+            _state.value = state.value.copy(isLoadingFiles = true)
+            val response = if (fileNode.id == "-1") repository.getRootFiles()
+            else repository.getChildren(fileNode.id)
+
+            if (response is FileResponse.Successful) {
+                _state.value = state.value.copy(
+                    isLoadingFiles = false,
+                    children = response.data.sortedByDescending { it.type.toString() }
+                )
+            } else if (response is FileResponse.Failure) {
+                _state.value = state.value.copy(
+                    isLoadingFiles = false,
+                    errorMessage = response.message
+                )
+            }
+        }
+    }
 
     fun onEvent(event: FileScreenUIEvent) {
         when (event) {
@@ -103,10 +184,6 @@ class FileScreenViewModel(
             }
             is FileScreenUIEvent.OpenFileNode -> {
                 _downloadProgress.update { FileProgress.Idle }
-                if (FileListViewModelRefreshRegistry.shouldRefresh(folderId = fileNode.id)) {
-                    FileListViewModelRefreshRegistry.markForRefresh(event.fileNode.id)
-                }
-
                 if (event.fileNode.type == FileNode.Companion.FileType.Folder) {
                     backStack.add(FileListScreen(event.fileNode))
                 } else {
@@ -132,6 +209,15 @@ class FileScreenViewModel(
                 _downloadProgress.value = FileProgress.Idle
             }
             FileScreenUIEvent.OpenTransferScreen -> backStack.add(Transfer)
+            is FileScreenUIEvent.UploadFile -> uploadFile(event.uri)
+        }
+    }
+
+    private fun uploadFile(uri: String) {
+        viewModelScope.launch {
+            repository.upload(uri, state.value.parentId)
+            FileEventManager.emit(FileSystemEvent.FileCreated(null, syncFolderId))
+            repository.invalidate(syncFolderId)
         }
     }
 
@@ -142,8 +228,7 @@ class FileScreenViewModel(
                 parentId = state.value.parentId
             )
             if (response is FileResponse.Successful) {
-                CopyMoveViewModelRefreshRegistry.markForRefresh(state.value.parentId ?: "-1")
-                loadContent(useCache = false)
+                repository.invalidate(syncFolderId)
             } else if (response is FileResponse.Failure) {
                 _effect.emit(FileScreenUIEffect.ShowSnackBar(response.message))
             }
@@ -152,10 +237,11 @@ class FileScreenViewModel(
 
     private fun delete(fileId: String) {
         viewModelScope.launch {
+            val fileNode = state.value.children.find { it.id == fileId }
             val response = repository.deleteFileNode(fileId = fileId)
             if (response is FileResponse.Successful) {
-                loadContent(false)
-                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+                fileNode?.let {  FileEventManager.emit(FileSystemEvent.FileDelete(it, it.parentId)) }
+                repository.invalidate(syncFolderId)
             } else if (response is FileResponse.Failure) {
                 _effect.emit(FileScreenUIEffect.ShowSnackBar(response.message))
             }
@@ -166,8 +252,7 @@ class FileScreenViewModel(
         viewModelScope.launch {
             val response = repository.renameFileNode(fileId = fileId, newName = newName)
             if (response is FileResponse.Successful) {
-                loadContent(false)
-                FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
+                repository.invalidate(syncFolderId)
             } else if (response is FileResponse.Failure){
                 _effect.emit(FileScreenUIEffect.ShowSnackBar(response.message))
             }
@@ -208,31 +293,6 @@ class FileScreenViewModel(
 
     private fun onAppear() {
         landingScreenViewModel.showBottomBars()
-        if (FileListViewModelRefreshRegistry.shouldRefresh(folderId = fileNode.id)) {
-            FileListViewModelRefreshRegistry.markForRefresh(fileNode.parentId ?: "-1")
-            FileListViewModelRefreshRegistry.clear(folderId = fileNode.id)
-            loadContent(useCache = false)
-        }
-    }
-
-    private fun loadContent(useCache: Boolean = true) {
-        viewModelScope.launch {
-            _state.value = state.value.copy(isLoadingFiles = true)
-            val response = if (fileNode.id == "-1") repository.getRootFiles(useCache)
-            else repository.getChildren(fileNode.id, null, useCache)
-
-            if (response is FileResponse.Successful) {
-                _state.value = state.value.copy(
-                    isLoadingFiles = false,
-                    children = response.data.sortedByDescending { it.type.toString() }
-                )
-            } else if (response is FileResponse.Failure) {
-                _state.value = state.value.copy(
-                    isLoadingFiles = false,
-                    errorMessage = response.message
-                )
-            }
-        }
     }
 
     private fun getFileUriAndPreview(fileNode: FileNode) {
