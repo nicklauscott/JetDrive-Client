@@ -23,7 +23,7 @@ class FileDetailScreenViewModel(
     private val fileNode: FileNode,
     private val backStack: NavBackStack,
     private val landingScreenViewModel: LandingScreenViewModel,
-    private val fileRepository: FileRepository
+    private val repository: FileRepository
 ): ViewModel() {
 
     private val _state: MutableState<FileDetailScreenUIState> =
@@ -43,12 +43,11 @@ class FileDetailScreenViewModel(
                     fileNode = fileNode,
                     folderId = "-1",
                     folderName = "Choose folder",
-                    action = Action.Copy
-                )
+                    action = Action.Copy)
                 )
             }
             is FileDetailScreenUIEvent.Delete -> delete(fileNode.id)
-            is FileDetailScreenUIEvent.Download -> TODO()
+            is FileDetailScreenUIEvent.Download -> downloadFile(fileNode)
             FileDetailScreenUIEvent.GoBack -> {
                 backStack.removeAt(backStack.lastIndex)
                 landingScreenViewModel.showBottomBars()
@@ -59,8 +58,7 @@ class FileDetailScreenViewModel(
                     fileNode = fileNode,
                     folderId = "-1",
                     folderName = "Choose folder",
-                    action = Action.Move
-                )
+                    action = Action.Move)
                 )
             }
             is FileDetailScreenUIEvent.Rename -> rename(fileNode.id, event.newName)
@@ -69,9 +67,9 @@ class FileDetailScreenViewModel(
 
     private fun delete(fileId: String) {
         viewModelScope.launch {
-            val response = fileRepository.deleteFileNode(fileId = fileId)
+            val response = repository.deleteFileNode(fileId = fileId)
             if (response is FileResponse.Successful) {
-                fileRepository.invalidate(fileNode.parentId ?: "root")
+                repository.invalidate(fileNode.parentId ?: "root")
                 backStack.removeAt(backStack.lastIndex)
                 landingScreenViewModel.showBottomBars()
             } else if (response is FileResponse.Failure) {
@@ -82,13 +80,19 @@ class FileDetailScreenViewModel(
 
     private fun rename(fileId: String, newName: String) {
         viewModelScope.launch {
-            val response = fileRepository.renameFileNode(fileId = fileId, newName = newName)
+            val response = repository.renameFileNode(fileId = fileId, newName = newName)
             if (response is FileResponse.Successful) {
                 _state.value = state.value.copy(fileNode = state.value.fileNode.copy(name = newName))
-                fileRepository.invalidate(fileNode.parentId ?: "root")
+                repository.invalidate(fileNode.parentId ?: "root")
             } else if (response is FileResponse.Failure){
                 _effect.emit(FileDetailScreenUIEffect.ShowSnackBar(response.message))
             }
+        }
+    }
+
+    private fun downloadFile(fileNode: FileNode) {
+        viewModelScope.launch {
+            repository.download(fileNode)
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.niclauscott.jetdrive.features.auth.ui.screen.login
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,16 +16,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.DeviceConfiguration
 import com.niclauscott.jetdrive.features.auth.ui.screen.component.AuthHeaderSection
 import com.niclauscott.jetdrive.features.auth.ui.screen.login.component.LoginFormSection
@@ -40,14 +41,15 @@ fun LoginScreen(
     viewModel: LoginScreenVieModel
 ) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    var toast by remember { mutableStateOf<Toast?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is LoginScreenUIEffect.ShowSnackbar -> {
-                    Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
-                    snackbarHostState.showSnackbar(effect.message)
+                    toast?.cancel()
+                    toast = Toast.makeText(context, effect.message, Toast.LENGTH_SHORT)
+                    toast?.show()
                 }
             }
         }
@@ -56,10 +58,7 @@ fun LoginScreen(
     Scaffold(
         modifier = modifier
             .fillMaxSize(),
-        contentWindowInsets = WindowInsets.statusBars,
-        snackbarHost = {
-            CustomSnackbarHost(snackbarHostState = snackbarHostState)
-        }
+        contentWindowInsets = WindowInsets.statusBars
     ) { innerPadding ->
         val rootModifier = Modifier
             .fillMaxSize()

@@ -1,6 +1,6 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_search
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.domain.util.openFileFromCache
-import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DownloadProgressDialog
@@ -48,8 +46,8 @@ fun FileSearchScreen(modifier: Modifier = Modifier, viewModel: FileSearchScreenV
     val state = viewModel.state
     val context = LocalContext.current
     var searchText by remember { mutableStateOf("") }
-    val snackbarHostState = remember { SnackbarHostState() }
     val previewState by viewModel.downloadProgress.collectAsState()
+    var toast by remember { mutableStateOf<Toast?>(null) }
 
     LaunchedEffect(searchText) {
         delay(200)
@@ -60,8 +58,9 @@ fun FileSearchScreen(modifier: Modifier = Modifier, viewModel: FileSearchScreenV
         viewModel.effect.collect { effect ->
             when (effect) {
                 is FileSearchUiEffect.ShowSnackBar -> {
-                    Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
-                    snackbarHostState.showSnackbar(effect.message)
+                    toast?.cancel()
+                    toast = Toast.makeText(context, effect.message, Toast.LENGTH_SHORT)
+                    toast?.show()
                 }
 
                 is FileSearchUiEffect.PreviewFile -> {
@@ -92,16 +91,15 @@ fun FileSearchScreen(modifier: Modifier = Modifier, viewModel: FileSearchScreenV
     if (previewState is FileProgress.Failure) {
         val message = (previewState as FileProgress.Failure).error
         LaunchedEffect(message) {
-            snackbarHostState.showSnackbar(message)
+            toast?.cancel()
+            toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
+            toast?.show()
         }
     }
 
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets.statusBars,
-        snackbarHost = {
-            CustomSnackbarHost(modifier = modifier,snackbarHostState = snackbarHostState)
-        },
         topBar = {
             FileSearchTopBar(
                 searchText = searchText,

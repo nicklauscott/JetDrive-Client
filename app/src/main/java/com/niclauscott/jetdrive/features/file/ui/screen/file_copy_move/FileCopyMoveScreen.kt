@@ -1,6 +1,6 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
-import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.FileCopyMoveNodeCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_copy_move.component.FileCopyMoveTopBar
@@ -52,16 +50,17 @@ fun FileCopyMoveScreen(
     viewModel: FileCopyMoveScreenViewModel,
 ) {
     val context = LocalContext.current
+    var toast by remember { mutableStateOf<Toast?>(null) }
     val state = viewModel.state
     var showCreateFolderDialog by rememberSaveable { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is FileCopyMoveScreenUIEffect.ShowSnackbar -> {
-                    Log.e("SplashScreenViewModel", "LoginScreen -> effect: ${effect.message}")
-                    snackbarHostState.showSnackbar(effect.message)
+                    toast?.cancel()
+                    toast = Toast.makeText(context, effect.message, Toast.LENGTH_SHORT)
+                    toast?.show()
                 }
             }
         }
@@ -79,9 +78,6 @@ fun FileCopyMoveScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.statusBars,
-        snackbarHost = {
-            CustomSnackbarHost(snackbarHostState = snackbarHostState)
-        },
         topBar = {
             FileCopyMoveTopBar(
                 title = state.value.title,

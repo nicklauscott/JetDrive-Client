@@ -27,7 +27,8 @@ val httpClientModule = module {
         else "http://127.0.0.1:8001"
         //baseUrl
 
-        "http://192.168.4.3:8001"
+        //"http://192.168.4.3:8001"
+        "http://192.168.54.127:8001"
     }
 
     single<TokenStorage> { DataStoreTokenStorage(get()) }

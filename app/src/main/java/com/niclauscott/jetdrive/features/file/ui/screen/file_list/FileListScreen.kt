@@ -42,7 +42,6 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.domain.util.openFileFromCache
-import com.niclauscott.jetdrive.core.ui.component.CustomSnackbarHost
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
@@ -60,7 +59,6 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEffect
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrder
-import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
 import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
 import com.niclauscott.jetdrive.features.landing.ui.components.FAB
 import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
