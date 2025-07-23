@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,11 +22,42 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
+import com.niclauscott.jetdrive.core.ui.util.DeviceConfiguration
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 
 @Composable
 fun FileCopyMoveTopBar(
+    modifier: Modifier = Modifier, isRoot: Boolean, title: String,
+    onCreateFolderClick: () -> Unit, onBackClick: () -> Unit,
+) {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
+
+    when (deviceConfiguration) {
+        DeviceConfiguration.MOBILE_PORTRAIT -> {
+            FileCopyMoveTopBarPortrait(
+                modifier = modifier,
+                isRoot = isRoot,
+                title = title,
+                onCreateFolderClick = onCreateFolderClick,
+                onBackClick = onBackClick
+            )
+        }
+        else -> {
+            FileCopyMoveTopBarLandscape(
+                modifier = modifier,
+                isRoot = isRoot,
+                title = title,
+                onCreateFolderClick = onCreateFolderClick,
+                onBackClick = onBackClick
+            )
+        }
+    }
+}
+
+@Composable
+fun FileCopyMoveTopBarLandscape(
     modifier: Modifier = Modifier,
     isRoot: Boolean,
     title: String,
@@ -33,10 +65,63 @@ fun FileCopyMoveTopBar(
     onBackClick: () -> Unit,
 ) {
     val context = LocalContext.current
-
     Card(
-        modifier = Modifier.fillMaxWidth()
-            .height(8.percentOfScreenHeight()),
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+        shape = RectangleShape,
+        colors = CardDefaults.cardColors(
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            containerColor = MaterialTheme.colorScheme.background
+        )
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 1.percentOfScreenHeight(), horizontal = 1.percentOfScreenWidth()),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(0.1f), contentAlignment = Alignment.CenterStart) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        painter = painterResource(if (isRoot) R.drawable.clear_icon else R.drawable.back_icon),
+                        contentDescription = getString(context, R.string.back_icon),
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            }
+
+            Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            Box(modifier = Modifier.weight(0.1f), contentAlignment = Alignment.CenterEnd) {
+                IconButton(onClick = onCreateFolderClick) {
+                    Icon(
+                        painter = painterResource(R.drawable.create_folder_icon),
+                        contentDescription = getString(context, R.string.create_folder_icon),
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FileCopyMoveTopBarPortrait(
+    modifier: Modifier = Modifier,
+    isRoot: Boolean,
+    title: String,
+    onCreateFolderClick: () -> Unit,
+    onBackClick: () -> Unit,
+) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         shape = RectangleShape,
         colors = CardDefaults.cardColors(

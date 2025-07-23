@@ -49,6 +49,7 @@ class FileCopyMoveScreenViewModel(
         repository.subScribe(syncFolderId) { files ->
             _state.value = state.value.copy(
                 children = files.sortedByDescending { it.type.toString() }
+                    .filter { it.type == FileNode.Companion.FileType.Folder }
             )
         }
 
@@ -132,6 +133,7 @@ class FileCopyMoveScreenViewModel(
                 _state.value = state.value.copy(
                     isLoadingFiles = false,
                     children = response.data.sortedByDescending { it.type.toString() }
+                        .filter { it.type == FileNode.Companion.FileType.Folder }
                 )
             } else if (response is FileResponse.Failure) {
                 _state.value = state.value.copy(

@@ -23,6 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +46,7 @@ fun FileSearchScreen(modifier: Modifier = Modifier, viewModel: FileSearchScreenV
 
     val state = viewModel.state
     val context = LocalContext.current
-    var searchText by remember { mutableStateOf("") }
+    var searchText by rememberSaveable { mutableStateOf("") }
     val previewState by viewModel.downloadProgress.collectAsState()
     var toast by remember { mutableStateOf<Toast?>(null) }
 

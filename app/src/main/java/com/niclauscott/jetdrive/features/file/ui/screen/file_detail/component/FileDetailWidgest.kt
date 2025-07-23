@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 
-
 @Composable
 fun ModernDetailCard(
     icon: ImageVector,

@@ -117,7 +117,7 @@ fun FileDetailScreenPortrait(
         Spacer(modifier = Modifier.height(2.percentOfScreenHeight()))
 
         Text(
-            text = "Details",
+            text = getString(context, R.string.details),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
@@ -129,7 +129,7 @@ fun FileDetailScreenPortrait(
             item {
                 ModernDetailCard(
                     icon = Icons.Default.Storage,
-                    label = "Size",
+                    label = getString(context, R.string.size),
                     value = fileNode.fileSize,
                     iconTint = MaterialTheme.colorScheme.primary
                 )
@@ -138,7 +138,7 @@ fun FileDetailScreenPortrait(
             item {
                 ModernDetailCard(
                     icon = Icons.Default.Add,
-                    label = "Added",
+                    label = getString(context, R.string.added),
                     value = fileNode.createdDate,
                     iconTint = MaterialTheme.colorScheme.secondary
                 )
@@ -147,7 +147,7 @@ fun FileDetailScreenPortrait(
             item {
                 ModernDetailCard(
                     icon = Icons.Default.Edit,
-                    label = "Last Modified",
+                    label = getString(context, R.string.modified),
                     value = fileNode.updatedDate,
                     iconTint = MaterialTheme.colorScheme.tertiary
                 )
