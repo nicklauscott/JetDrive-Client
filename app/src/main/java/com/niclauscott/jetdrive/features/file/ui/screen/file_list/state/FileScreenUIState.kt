@@ -3,7 +3,7 @@ package com.niclauscott.jetdrive.features.file.ui.screen.file_list.state
 import com.niclauscott.jetdrive.features.file.domain.model.FileNode
 
 data class FileScreenUiState(
-    val isLoadingFiles: Boolean? = null,
+    val isLoadingFiles: Boolean = false,
     val errorMessage: String? = null,
 
     val parentId: String? = null,
@@ -12,4 +12,5 @@ data class FileScreenUiState(
 
     val sortType: SortType = SortType.Name,
     val sortOrder: SortOrder = SortOrder.ASC,
+    val isRefreshing: Boolean = false
 )

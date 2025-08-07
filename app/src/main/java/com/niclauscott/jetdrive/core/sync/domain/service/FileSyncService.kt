@@ -53,7 +53,7 @@ class FileSyncService(
                 } catch (ex: Exception) {
                     Log.d(TAG("FileSyncService"), "start -> Error syncing file: ${ex.message}")
                 }
-                delay(15_000)
+                delay(10_000)
             }
         }
     }

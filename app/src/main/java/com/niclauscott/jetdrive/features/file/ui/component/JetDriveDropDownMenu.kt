@@ -65,7 +65,7 @@ fun CustomDropDownMenu(
             verticalArrangement = Arrangement.Center) {
             Text(text = selectedItem,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.inverseOnSurface
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
         Column(modifier = Modifier
@@ -74,7 +74,7 @@ fun CustomDropDownMenu(
             verticalArrangement = Arrangement.Center) {
             Icon(imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = getString(context, R.string.show_more),
-                tint = MaterialTheme.colorScheme.inverseOnSurface,
+                tint = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.size(25.dp)
             )
         }

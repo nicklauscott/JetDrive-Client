@@ -1,8 +1,10 @@
 package com.niclauscott.jetdrive.features.file.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.niclauscott.jetdrive.core.cache.InMemoryCache
 import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
+import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.domain.util.getNetworkErrorMessage
 import com.niclauscott.jetdrive.features.file.data.model.dto.AudioMetadataResponseDTO
 import com.niclauscott.jetdrive.features.file.data.model.dto.FileUrlResponseDTO
@@ -101,6 +103,7 @@ class FilePreviewRepositoryImpl(
 
     override fun downloadToCacheFile(url: String): Flow<FileProgress<File>> = flow {
         try {
+            Log.d(TAG("FilePreviewRepository"), "downloadToCacheFile: url: $url")
             val response = unAuthClient.get(url)
             if (response.status != HttpStatusCode.OK) throw Exception("Failed: ${response.status}")
 

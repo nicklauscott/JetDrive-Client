@@ -1,5 +1,7 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_preview.component
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,13 +10,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -28,10 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.niclauscott.jetdrive.core.ui.util.DeviceConfiguration
@@ -48,6 +48,7 @@ fun AudioPlayer(
     player: ExoPlayer?,
     fileNode: FileNode,
     audioMetadata: AudioMetadata?,
+    onAverageColorCalculated: (Color) -> Unit,
     onDispose: () -> Unit,
 ) {
     var position by remember { mutableLongStateOf(player?.currentPosition ?: 0L) }
@@ -70,17 +71,19 @@ fun AudioPlayer(
     when {
         player == null -> {}
         else -> {
-            AndroidView(
-                modifier = Modifier.size(5.dp),
-                factory = { context ->
-                    PlayerView(context).apply {
-                        this.player = player
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                AndroidView(
+                    modifier = Modifier.size(5.dp),
+                    factory = { context ->
+                        PlayerView(context).apply {
+                            this.player = player
+                        }
+                    },
+                    update = { playerView ->
+                        playerView.player = player
                     }
-                },
-                update = { playerView ->
-                    playerView.player = player
-                }
-            )
+                )
+            }
 
             position = player.currentPosition
             duration = player.duration.takeIf { it > 0 } ?: 1L
@@ -96,6 +99,7 @@ fun AudioPlayer(
                         position = position,
                         duration = duration,
                         isPlaying = isPlaying,
+                        onAverageColorCalculated = onAverageColorCalculated,
                         onPositionChange = { position = it },
                     ) { player.seekTo(position) }
                 }
@@ -108,6 +112,7 @@ fun AudioPlayer(
                         position = position,
                         duration = duration,
                         isPlaying = isPlaying,
+                        onAverageColorCalculated = onAverageColorCalculated,
                         onPositionChange = { position = it },
                     ) { player.seekTo(position) }
                 }
@@ -123,14 +128,15 @@ fun LandscapeMusicPlayer(
     fileNode: FileNode,
     audioMetadata: AudioMetadata?,
     position: Long, duration: Long, isPlaying: Boolean,
+    onAverageColorCalculated: (Color) -> Unit,
     onPositionChange: (Long) -> Unit,
     onSeekFinished: () -> Unit
 ) {
+    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     Row(
         modifier = modifier
             .fillMaxSize()
             .padding(top = 2.percentOfScreenHeight())
-            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -155,6 +161,18 @@ fun LandscapeMusicPlayer(
                             .clip(RoundedCornerShape(12.dp)),
                         base64String = audioMetadata.base64CoverArt
                     )
+
+                    imageBitmap =  try {
+                        val base64Data = audioMetadata.base64CoverArt.substringAfter("base64,")
+                        val imageBytes = Base64.decode(base64Data, Base64.DEFAULT)
+                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                        bitmap?.asImageBitmap()
+                    } catch (e: Exception) { null }
+
+                    imageBitmap?.let {
+                        onAverageColorCalculated(getAverageColor(imageBitmap = it))
+                    }
+
                 }
             }
         }
@@ -261,14 +279,14 @@ fun PortraitMusicPlayer(
     fileNode: FileNode,
     audioMetadata: AudioMetadata?,
     position: Long, duration: Long, isPlaying: Boolean,
+    onAverageColorCalculated: (Color) -> Unit,
     onPositionChange: (Long) -> Unit,
     onSeekFinished: () -> Unit
 ) {
-
+    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         Column(
@@ -309,6 +327,18 @@ fun PortraitMusicPlayer(
                             .clip(RoundedCornerShape(12.dp)),
                         base64String = audioMetadata.base64CoverArt
                     )
+
+                    imageBitmap =  try {
+                            val base64Data = audioMetadata.base64CoverArt.substringAfter("base64,")
+                            val imageBytes = Base64.decode(base64Data, Base64.DEFAULT)
+                            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            bitmap?.asImageBitmap()
+                    } catch (e: Exception) { null }
+
+                    imageBitmap?.let {
+                        onAverageColorCalculated(getAverageColor(imageBitmap = it))
+                    }
+
                 }
 
                 Column(
@@ -362,15 +392,6 @@ fun PortraitMusicPlayer(
                     onPositionChange = onPositionChange,
                     onSeekFinished = onSeekFinished
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = formatTime(position), color = Color.White)
-                    Text(text = formatTime(duration), color = Color.White)
-                }
             }
 
 

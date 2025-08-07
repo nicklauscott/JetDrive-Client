@@ -31,7 +31,6 @@ fun FileScreenTopBar(
     modifier: Modifier = Modifier,
     title: String = "",
     isRoot: Boolean = false,
-    onMoreClick: () -> Unit = { },
     onSearchClick: () -> Unit = { },
     onBackClick: () -> Unit = { }
 ) {
@@ -40,14 +39,10 @@ fun FileScreenTopBar(
 
     when (deviceConfiguration) {
         DeviceConfiguration.MOBILE_PORTRAIT -> {
-            FileScreenTopBarPortrait(
-                modifier, title, isRoot, onMoreClick, onSearchClick, onBackClick
-            )
+            FileScreenTopBarPortrait(modifier, title, isRoot, onSearchClick, onBackClick)
         }
         else -> {
-            FileScreenTopBarLandscape(
-                modifier, title, isRoot, onMoreClick, onSearchClick, onBackClick
-            )
+            FileScreenTopBarLandscape(modifier, title, isRoot, onSearchClick, onBackClick)
         }
     }
 }
@@ -57,7 +52,6 @@ fun FileScreenTopBarLandscape(
     modifier: Modifier = Modifier,
     title: String = "",
     isRoot: Boolean = false,
-    onMoreClick: () -> Unit = { },
     onSearchClick: () -> Unit = { },
     onBackClick: () -> Unit = { }
 ) {
@@ -100,28 +94,16 @@ fun FileScreenTopBarLandscape(
             }
 
             Row(
-                modifier = Modifier.weight(0.2f),
+                modifier = Modifier.weight(0.1f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                    IconButton(onClick = onSearchClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.search_icon),
-                            contentDescription = getString(context, R.string.create_folder_icon),
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                    IconButton(onClick = onMoreClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.more_vert_icon),
-                            contentDescription = getString(context, R.string.create_folder_icon),
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
+                IconButton(onClick = onSearchClick) {
+                    Icon(
+                        painter = painterResource(R.drawable.search_icon),
+                        contentDescription = getString(context, R.string.create_folder_icon),
+                        modifier = Modifier.size(30.dp)
+                    )
                 }
             }
         }
@@ -134,7 +116,6 @@ fun FileScreenTopBarPortrait(
     modifier: Modifier = Modifier,
     title: String = "",
     isRoot: Boolean = false,
-    onMoreClick: () -> Unit = { },
     onSearchClick: () -> Unit = { },
     onBackClick: () -> Unit = { }
 ) {
@@ -178,20 +159,13 @@ fun FileScreenTopBarPortrait(
             }
 
             Row(
-                modifier = Modifier.weight(0.3f),
+                modifier = Modifier.weight(0.1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround
+                horizontalArrangement = Arrangement.End
             ) {
                 IconButton(onClick = onSearchClick) {
                     Icon(
                         painter = painterResource(R.drawable.search_icon),
-                        contentDescription = getString(context, R.string.create_folder_icon),
-                        modifier = Modifier.size(30.dp)
-                    )
-                }
-                IconButton(onClick = onMoreClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.more_vert_icon),
                         contentDescription = getString(context, R.string.create_folder_icon),
                         modifier = Modifier.size(30.dp)
                     )

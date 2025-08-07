@@ -17,13 +17,7 @@ fun AuthHeaderSection(
         modifier = modifier,
         horizontalAlignment = alignment
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text(text = title, style = MaterialTheme.typography.titleLarge)
+        Text(text = description, style = MaterialTheme.typography.bodyLarge)
     }
 }

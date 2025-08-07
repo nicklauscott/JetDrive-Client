@@ -3,6 +3,8 @@ package com.niclauscott.jetdrive.features.profile.data.repository
 import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.datastore.core.DataStore
+import com.niclauscott.jetdrive.core.datastore.UserPreferences
 import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.domain.dto.UserFileStatsResponseDTO
 import com.niclauscott.jetdrive.core.domain.mapper.toUserFileStats
@@ -38,6 +40,7 @@ import java.io.InputStream
 
 class ProfileRepositoryImpl(
     baseUrl: String, private val client: HttpClient, private val context: Context,
+    private val dataStore: DataStore<UserPreferences>
 ): ProfileRepository {
     private val fileUrl = "$baseUrl/files"
     private val userUrl = "$baseUrl/user"
@@ -142,6 +145,10 @@ class ProfileRepositoryImpl(
         } catch (ex: Throwable) {
             ProfileResponse.Failure(getNetworkErrorMessage(ex))
         }
+    }
+
+    override suspend fun logout() {
+        dataStore.updateData { UserPreferences(null, null) }
     }
 
     private fun InputStream.getFileByteFromUri(): ByteArray {

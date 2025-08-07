@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -24,33 +25,42 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
+import com.niclauscott.jetdrive.features.file.ui.screen.file_preview.FileState
 
 @Composable
 fun PortraitFilePreviewScreenTopBar(
     modifier: Modifier = Modifier,
+    state: FileState,
     title: String = "",
     onBackClick: () -> Unit
 ) {
-
     val context = LocalContext.current
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .height(8.percentOfScreenHeight()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         shape = RectangleShape,
         colors = CardDefaults.cardColors(
-            contentColor = MaterialTheme.colorScheme.onBackground,
-            containerColor = MaterialTheme.colorScheme.background
+            contentColor = when (state) {
+                FileState.Successful -> MaterialTheme.colorScheme.onTertiaryContainer
+                else -> MaterialTheme.colorScheme.onBackground
+            },
+            containerColor = when (state) {
+                FileState.Successful -> Color.Black.copy(alpha = 0.5f)
+                FileState.None -> Color.Transparent
+                else -> MaterialTheme.colorScheme.background
+            }
         )
     ) {
+
         Row(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(vertical = 1.percentOfScreenHeight()),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.weight(0.2f), contentAlignment = Alignment.CenterStart) {
+            Box(modifier = Modifier.weight(0.1f), contentAlignment = Alignment.CenterStart) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         painter = painterResource(R.drawable.back_icon),
@@ -60,11 +70,10 @@ fun PortraitFilePreviewScreenTopBar(
                 }
             }
 
-            Box(modifier = Modifier.weight(0.8f), contentAlignment = Alignment.CenterStart) {
+            Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -76,20 +85,26 @@ fun PortraitFilePreviewScreenTopBar(
 @Composable
 fun LandscapeFilePreviewScreenTopBar(
     modifier: Modifier = Modifier,
+    state: FileState,
     title: String = "",
     onBackClick: () -> Unit
 ) {
-
     val context = LocalContext.current
-
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .height(12.percentOfScreenHeight()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         shape = RectangleShape,
         colors = CardDefaults.cardColors(
-            contentColor = MaterialTheme.colorScheme.onBackground,
-            containerColor = MaterialTheme.colorScheme.background
+            contentColor = when (state) {
+                FileState.Successful -> MaterialTheme.colorScheme.onTertiaryContainer
+                else -> MaterialTheme.colorScheme.onBackground
+            },
+            containerColor = when (state) {
+                FileState.Successful -> Color.Black.copy(alpha = 0.5f)
+                FileState.None -> Color.Transparent
+                else -> MaterialTheme.colorScheme.background
+            }
         )
     ) {
         Row(
@@ -98,7 +113,9 @@ fun LandscapeFilePreviewScreenTopBar(
                 .padding(vertical = 1.percentOfScreenHeight()),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.weight(0.2f).fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
+            Box(modifier = Modifier
+                .weight(0.1f)
+                .fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         painter = painterResource(R.drawable.back_icon),
@@ -108,11 +125,12 @@ fun LandscapeFilePreviewScreenTopBar(
                 }
             }
 
-            Box(modifier = Modifier.weight(0.8f).fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
+            Box(modifier = Modifier
+                .weight(0.9f)
+                .fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
                     overflow = TextOverflow.Ellipsis
                 )
             }

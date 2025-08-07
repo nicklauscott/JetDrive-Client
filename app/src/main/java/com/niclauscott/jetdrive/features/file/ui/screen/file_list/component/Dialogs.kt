@@ -1,7 +1,10 @@
 package com.niclauscott.jetdrive.features.file.ui.screen.file_list.component
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,13 +19,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -33,6 +42,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.PositionalThreshold
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.pullToRefreshIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,6 +59,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -61,6 +75,157 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyCustomIndicator(
+    enabled: Boolean,
+    state: PullToRefreshState,
+    isRefreshing: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (enabled) {
+        Box(
+            modifier = modifier.pullToRefreshIndicator(
+                state = state,
+                isRefreshing = isRefreshing,
+                containerColor = PullToRefreshDefaults.containerColor,
+                threshold = PositionalThreshold
+            ),
+            contentAlignment = Alignment.Center
+        ) {
+            Crossfade(
+                targetState = isRefreshing,
+                animationSpec = tween(durationMillis = 200),
+                modifier = Modifier.align(Alignment.Center)
+            ) { refreshing ->
+                if (refreshing) {
+                    CircularProgressIndicator(
+                        Modifier.size(18.dp), color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    val distanceFraction = { state.distanceFraction.coerceIn(0f, 1f) }
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = "Refresh",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .graphicsLayer {
+                                val progress = distanceFraction()
+                                this.alpha = progress
+                                this.scaleX = progress
+                                this.scaleY = progress
+                            }
+                    )
+                }
+            }
+        }
+    }
+
+}
+
+@Composable
+fun LogoutDialog(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onConfirmClick: () -> Unit
+) {
+    val context = LocalContext.current
+
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 6.dp
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 3.percentOfScreenHeight(),
+                        horizontal = 4.percentOfScreenWidth()
+                    ),
+                verticalArrangement = Arrangement.spacedBy(3.percentOfScreenHeight())
+            ) {
+                // Header with warning icon
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.percentOfScreenWidth())
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Logout,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        Text(
+                            text = stringResource(R.string.logout_message),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 1.percentOfScreenWidth()),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        label = getString(context, R.string.cancel),
+                        enabled = true
+                    )
+
+                    Spacer(modifier = Modifier.width(2.percentOfScreenWidth()))
+
+                    Button(
+                        onClick = onConfirmClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ),
+                        modifier = Modifier.height(40.dp)
+                    ) {
+                        Text(
+                            text =  stringResource(R.string.logout),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun DeleteDialog(
@@ -218,9 +383,7 @@ fun RenameDialog(
     }
 
     Dialog(
-        onDismissRequest = {
-            if (!isLoading) onDismiss()
-        },
+        onDismissRequest = {},
         properties = DialogProperties(
             dismissOnBackPress = !isLoading,
             dismissOnClickOutside = !isLoading

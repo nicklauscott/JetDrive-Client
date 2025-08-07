@@ -3,7 +3,6 @@ package com.niclauscott.jetdrive.features.file.ui.screen.file_list.component
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,17 +18,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.DriveFileMove
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -59,10 +55,8 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
 
 @Composable
 fun FileNodeCell(
-    modifier: Modifier = Modifier,
-    fileNode: FileNode,
-    onMoreClick: () -> Unit,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier, fileNode: FileNode,
+    onMoreClick: () -> Unit, onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val fileIcon by remember { mutableIntStateOf(getFileIcon(fileNode.mimeType ?: "-1")) }
@@ -161,7 +155,7 @@ fun FileNodeCell(
                             Text(
                                 text = fileNode.fileSize,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier.padding(
                                     horizontal = 8.dp,
                                     vertical = 4.dp
@@ -285,7 +279,7 @@ fun CompactActionButtonsRow(
                 modifier = Modifier.height(36.dp)
             ) {
                 Icon(
-                    imageVector = if (action == Action.Copy) Icons.Default.ContentCopy else Icons.Default.DriveFileMove,
+                    imageVector = if (action == Action.Copy) Icons.Default.ContentCopy else Icons.AutoMirrored.Filled.DriveFileMove,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp)
                 )

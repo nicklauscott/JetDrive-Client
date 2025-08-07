@@ -21,8 +21,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TabRowDefaults.Indicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +45,8 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.core.domain.util.openFileFromCache
+import com.niclauscott.jetdrive.core.ui.component.TransferServicePermissionHandler
+import com.niclauscott.jetdrive.core.ui.component.hasTransferServicePermission
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
 import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
@@ -53,6 +58,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.Down
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileNodeCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenBottomSheet
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.FileScreenTopBar
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.MyCustomIndicator
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.RenameDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.SortingAndOrderCell
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.Action
@@ -62,17 +68,20 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortOrde
 import com.niclauscott.jetdrive.features.landing.ui.components.ActionsBottomSheet
 import com.niclauscott.jetdrive.features.landing.ui.components.FAB
 import com.niclauscott.jetdrive.features.landing.ui.state.FileActions
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel) {
 
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState()
 
     val activeTransfer by viewModel.activeTransfer.collectAsState()
     val previewState by viewModel.downloadProgress.collectAsState()
+
+    var requestPermission by remember { mutableStateOf(false) }
+    var permissionGranted by remember { mutableStateOf(false) }
 
     var selectedFileNode by remember { mutableStateOf<FileNode?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -82,9 +91,10 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
     var showRenameDialog by rememberSaveable { mutableStateOf<FileNode?>(null) }
     var showDeleteDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var toast by remember { mutableStateOf<Toast?>(null) }
+    val pullRefreshState = rememberPullToRefreshState()
 
-    LaunchedEffect(Unit) { viewModel.onEvent(FileScreenUIEvent.RefreshData) }
-
+    LaunchedEffect(Unit) { permissionGranted = hasTransferServicePermission(context) }
+    LaunchedEffect(Unit) { viewModel.onEvent(FileScreenUIEvent.RefreshOnAppear) }
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
@@ -114,6 +124,21 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
         }
     }
 
+    if (requestPermission) {
+        TransferServicePermissionHandler(
+            onPermissionGranted = {
+                requestPermission = false
+                permissionGranted = true
+            },
+            onPermissionDenied = {
+                requestPermission = false
+                permissionGranted = false
+                toast?.cancel()
+                toast = Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT)
+                toast?.show()
+            }
+        )
+    }
 
     if (previewState is FileProgress.Loading) {
         DownloadProgressDialog((previewState as FileProgress.Loading).percent) {
@@ -136,7 +161,9 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
     if (previewState is FileProgress.Failure) {
         val message = (previewState as FileProgress.Failure).error
         LaunchedEffect(message) {
-            snackbarHostState.showSnackbar(message)
+            toast?.cancel()
+            toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
+            toast?.show()
         }
     }
 
@@ -181,6 +208,7 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
 
     val state = viewModel.state
 
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         floatingActionButton = {
@@ -196,7 +224,6 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                 title = viewModel.state.value.title.take(20),
                 isRoot = viewModel.state.value.parentId == null,
                 onSearchClick = { viewModel.onEvent(FileScreenUIEvent.Search) },
-                onMoreClick = {},
                 onBackClick = { viewModel.onEvent(FileScreenUIEvent.GoBack) }
             )
         }
@@ -210,7 +237,11 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
             ) { fileAction ->
                 when (fileAction) {
                     FileActions.CreateFolder -> showCreateFolderDialog = true
-                    FileActions.UploadFile -> launcher.launch(arrayOf("*/*"))
+                    FileActions.UploadFile -> {
+                        if (permissionGranted) {
+                            launcher.launch(arrayOf("*/*"))
+                        } else requestPermission = true
+                    }
                 }
                 showFileActionBottomSheet = false
             }
@@ -226,7 +257,11 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                     Action.Rename -> selectedFileNode?.let { showRenameDialog = it }
                     Action.Delete ->  selectedFileNode?.let { showDeleteDialog = it.id }
                     Action.Info -> selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.FileDetails(it)) }
-                    Action.Download -> selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Download(it)) }
+                    Action.Download -> {
+                        if (permissionGranted) {
+                            selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Download(it)) }
+                        } else requestPermission = true
+                    }
                     Action.Move ->  selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Move(fileNode = it)) }
                     Action.Copy -> selectedFileNode?.let { viewModel.onEvent(FileScreenUIEvent.Copy(fileNode = it)) }
                 }
@@ -234,68 +269,89 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
             }
         }
 
-        when {
-            state.value.isLoadingFiles == true -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(50.dp),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                return@Scaffold
+        PullToRefreshBox(
+            modifier = modifier
+                .padding(top = paddingValues.calculateTopPadding()),
+            isRefreshing = viewModel.state.value.isRefreshing,
+            onRefresh = {
+                if (!viewModel.state.value.isLoadingFiles) viewModel.onEvent(FileScreenUIEvent.RefreshData)
+            },
+            state = pullRefreshState,
+            indicator = {
+                MyCustomIndicator(
+                    enabled = !viewModel.state.value.isLoadingFiles,
+                    state = pullRefreshState,
+                    isRefreshing = viewModel.state.value.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
             }
-
-            state.value.isLoadingFiles == false && state.value.errorMessage != null ->  {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.error_icon),
-                        contentDescription = getString(context, R.string.upload_icon),
-                        modifier = Modifier.size(100.dp)
-                    )
-                    Spacer(modifier = Modifier.height(1.percentOfScreenHeight()))
-                    Text(
-                        viewModel.state.value.errorMessage ?: getString(context, R.string.unknown_error),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.inverseOnSurface
-                    )
+        ) {
+            if (state.value.isLoadingFiles) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillParentMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(50.dp),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
                 }
-                return@Scaffold
             }
-
-            state.value.isLoadingFiles == false && state.value.children.isEmpty() -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.open_folder_icon),
-                        contentDescription = getString(context, R.string.upload_icon),
-                        modifier = Modifier.size(100.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.tertiary)
-                    )
-                    Spacer(modifier = Modifier.height(1.percentOfScreenHeight()))
-                    Text(
-                        getString(context, R.string.empty_folder),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.inverseOnSurface
-                    )
+            else if (!state.value.isLoadingFiles && state.value.errorMessage != null) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillParentMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.error_icon),
+                                contentDescription = getString(context, R.string.upload_icon),
+                                modifier = Modifier.size(100.dp)
+                            )
+                            Spacer(modifier = Modifier.height(1.percentOfScreenHeight()))
+                            Text(
+                                viewModel.state.value.errorMessage ?: getString(context, R.string.unknown_error),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.inverseOnSurface
+                            )
+                        }
+                    }
                 }
-                return@Scaffold
             }
-
-            else -> {
+            else if (!state.value.isLoadingFiles && state.value.children.isEmpty()) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillParentMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.open_folder_icon),
+                                contentDescription = getString(context, R.string.upload_icon),
+                                modifier = Modifier.size(100.dp),
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.tertiary)
+                            )
+                            Spacer(modifier = Modifier.height(1.percentOfScreenHeight()))
+                            Text(
+                                getString(context, R.string.empty_folder),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.inverseOnSurface
+                            )
+                        }
+                    }
+                }
+            }
+            else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = paddingValues.calculateTopPadding())
                         .padding(horizontal = 2.percentOfScreenWidth())
                 ) {
 
@@ -308,7 +364,7 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                                 viewModel.onEvent(FileScreenUIEvent.Sort(
                                     sortType = viewModel.state.value.sortType,
                                     sortOrder = if (viewModel.state.value.sortOrder == SortOrder.ASC) SortOrder.DESC
-                                        else SortOrder.ASC
+                                    else SortOrder.ASC
                                 ))
                             }
                         ) {
@@ -330,6 +386,5 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
                 }
             }
         }
-
     }
 }

@@ -7,4 +7,5 @@ sealed interface HomeScreenUIEvent {
     data class UploadFile(val uri: String): HomeScreenUIEvent
     data class OpenFileNode(val fileNode: FileNode): HomeScreenUIEvent
     data object OpenTransferScreen: HomeScreenUIEvent
+    data object CancelDownload: HomeScreenUIEvent
 }

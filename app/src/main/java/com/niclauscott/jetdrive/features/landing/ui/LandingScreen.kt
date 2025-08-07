@@ -34,7 +34,6 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
 
     val backStack = rememberNavBackStack(HomeScreen)
     val showBottomBar by viewModel.showBottomBar.collectAsState()
-    var currentScreenIndex by remember { mutableIntStateOf(0) }
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -49,20 +48,20 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
             ) {
-                BottomNavigationBar(currentScreenIndex) { selectedScreen ->
+                BottomNavigationBar(viewModel.state.value.currentScreen) { selectedScreen ->
                     when (selectedScreen) {
                         0 -> {
-                            currentScreenIndex = 0
+                            viewModel.changeScreen(0)
                             backStack.clear()
                             backStack.add(HomeScreen)
                         }
                         1 -> {
-                            currentScreenIndex = 1
+                            viewModel.changeScreen(1)
                             backStack.clear()
                             backStack.add(FileScreen)
                         }
                         2 -> {
-                            currentScreenIndex = 2
+                            viewModel.changeScreen(2)
                             backStack.clear()
                             backStack.add(ProfileScreen)
                         }
@@ -79,7 +78,6 @@ fun LandingScreen(modifier: Modifier = Modifier, viewModel: LandingScreenViewMod
                 sheetState = sheetState,
                 onDismiss = { showBottomSheet = false }
             ) {
-
                 showBottomSheet = false
             }
         }

@@ -19,6 +19,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +33,7 @@ import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenWidth
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.LogoutDialog
 import com.niclauscott.jetdrive.features.home.ui.component.StatsCard
 import com.niclauscott.jetdrive.features.profile.ui.state.ProfileScreenUiState
 
@@ -37,10 +42,18 @@ fun ProfileScreenPortrait(
     modifier: Modifier = Modifier,
     state: ProfileScreenUiState,
     onPhotoEdit: (String) -> Unit,
+    onLogoutClick: () -> Unit,
     onEditClick: () -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        LogoutDialog(onDismiss = { showLogoutDialog = false }) {
+            onLogoutClick()
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         Row(modifier = modifier
@@ -82,6 +95,7 @@ fun ProfileScreenPortrait(
                             updatingProfile = state.isProfileUpdating,
                             imageUploading = state.isProfilePictureUpdating,
                             onPhotoEdit = onPhotoEdit,
+                            onLogoutClick = { showLogoutDialog = true },
                             onEditClick = onEditClick
                         )
                     }

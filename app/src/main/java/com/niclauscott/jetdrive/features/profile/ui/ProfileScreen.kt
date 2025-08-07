@@ -67,6 +67,9 @@ fun ProfileScreen(modifier: Modifier = Modifier, viewModel: ProfileScreenViewMod
                     modifier = modifier.fillMaxSize(),
                     state = state.value,
                     onPhotoEdit = { viewModel.onEvent(ProfileScreenUiEvent.UploadProfilePicture(it)) },
+                    onLogoutClick = {
+                      viewModel.onEvent(ProfileScreenUiEvent.Logout)
+                    },
                     onEditClick = { showEditProfileNameDialog = true }
                 )
             }
@@ -75,6 +78,9 @@ fun ProfileScreen(modifier: Modifier = Modifier, viewModel: ProfileScreenViewMod
                     modifier = modifier.fillMaxSize(),
                     state = state.value,
                     onPhotoEdit = { viewModel.onEvent(ProfileScreenUiEvent.UploadProfilePicture(it)) },
+                    onLogoutClick = {
+                        viewModel.onEvent(ProfileScreenUiEvent.Logout)
+                    },
                     onEditClick = { showEditProfileNameDialog = true }
                 )
             }

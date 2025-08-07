@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.niclauscott.jetdrive.R
 
 @Composable
-fun OAuth2LoginSection(modifier: Modifier = Modifier, onClicked: () -> Unit) {
+fun OAuth2LoginSectionPortrait(modifier: Modifier = Modifier, onClicked: () -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "Sign in with",
@@ -47,12 +47,12 @@ fun OAuth2LoginSection(modifier: Modifier = Modifier, onClicked: () -> Unit) {
     }
 }
 
+
 @Composable
 fun OAuthClient(
     modifier: Modifier = Modifier, painter: Painter,
     contentDescription: String, onClicked: () -> Unit
 ) {
-
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(

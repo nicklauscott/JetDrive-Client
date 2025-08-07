@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class SplashScreenViewModel(
-    private val authRepository: AuthValidationRepository
-): ViewModel() {
+class SplashScreenViewModel(private val authRepository: AuthValidationRepository): ViewModel() {
 
     private val _screen = mutableStateOf<NavKey?>(null)
     val screen: State<NavKey?> get() = _screen
@@ -28,9 +26,9 @@ class SplashScreenViewModel(
         get() = _screen.value != null
 
     init {
-        _screen.value = Landing // Remove later
+        //_screen.value = Landing // Remove later
         //_screen.value = Login(null) // Remove later
-        /* // Uncomment later
+        ///* // Uncomment later
         viewModelScope.launch {
             val response = authRepository.validate()
             _screen.value = when (response) {
@@ -42,7 +40,7 @@ class SplashScreenViewModel(
                 AuthValidationResponse.ValidationSuccessful -> Landing
             }
         }
-        */
+        //*/
     }
 
     sealed interface SplashScreenEffect {

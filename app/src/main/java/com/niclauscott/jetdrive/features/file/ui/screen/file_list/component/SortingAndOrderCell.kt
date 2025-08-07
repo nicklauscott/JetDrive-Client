@@ -53,7 +53,7 @@ fun SortingAndOrderCell(
                 ),
                 contentDescription = getString(context, R.string.sort_order),
                 modifier = Modifier.size(30.dp),
-                tint = MaterialTheme.colorScheme.inverseOnSurface
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
     }

@@ -97,7 +97,7 @@ fun NavigationRoot(
 
                     is Landing -> {
                         NavEntry(key = key) {
-                            val viewModel: LandingScreenViewModel = koinViewModel()
+                            val viewModel: LandingScreenViewModel = koinViewModel { parametersOf(backStack) }
                             LandingScreen(viewModel = viewModel)
                         }
                     }

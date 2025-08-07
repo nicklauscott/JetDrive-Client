@@ -13,30 +13,18 @@ import com.niclauscott.jetdrive.features.landing.ui.state.LandingScreenUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class LandingScreenViewModel(syncService: FileSyncService): ViewModel() {
+class LandingScreenViewModel(
+    syncService: FileSyncService,
+    val rootBackStack: NavBackStack
+): ViewModel() {
 
     private val _state: MutableState<LandingScreenUiState> = mutableStateOf(LandingScreenUiState())
     val state: State<LandingScreenUiState> = _state
 
-    // Get latest data from database
-    private val _activeFileOperation: MutableState<Boolean>
-        get() = mutableStateOf(true)
-    val activeFileOperation: State<Boolean> = _activeFileOperation
-
-    // Get latest progress from database data
-    private val _activeFileOperationProgress: MutableState<Float>
-        get() = mutableFloatStateOf(0.4f)
-    val activeFileOperationProgress: State<Float> = _activeFileOperationProgress
-
     private val _showBottomBar = MutableStateFlow(true)
     val showBottomBar: StateFlow<Boolean> = _showBottomBar
 
-    private val _showFab = MutableStateFlow(true)
-    val showFab: StateFlow<Boolean> = _showFab
-
-    val homeScreenBackStack = NavBackStack()
     val fileScreenBackStack = NavBackStack()
-    val profileScreenBackStack = NavBackStack()
 
     init {
         syncService.start()
@@ -49,6 +37,10 @@ class LandingScreenViewModel(syncService: FileSyncService): ViewModel() {
 
     fun showBottomBars() {
         _showBottomBar.value = true
+    }
+
+    fun changeScreen(screenIndex: Int) {
+        _state.value = state.value.copy(currentScreen = screenIndex)
     }
 
 }

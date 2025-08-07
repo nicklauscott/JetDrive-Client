@@ -28,6 +28,7 @@ import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.SortType
 import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import com.niclauscott.jetdrive.features.landing.ui.navigation.Transfer
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -132,26 +133,6 @@ class FileScreenViewModel(
         }
     }
 
-    private fun loadContents() {
-        viewModelScope.launch {
-            _state.value = state.value.copy(isLoadingFiles = true)
-            val response = if (fileNode.id == "-1") repository.getRootFiles()
-            else repository.getChildren(fileNode.id)
-
-            if (response is FileResponse.Successful) {
-                _state.value = state.value.copy(
-                    isLoadingFiles = false,
-                    children = response.data.sortedByDescending { it.type.toString() }
-                )
-            } else if (response is FileResponse.Failure) {
-                _state.value = state.value.copy(
-                    isLoadingFiles = false,
-                    errorMessage = response.message
-                )
-            }
-        }
-    }
-
     fun onEvent(event: FileScreenUIEvent) {
         when (event) {
             is FileScreenUIEvent.Copy -> {
@@ -200,7 +181,8 @@ class FileScreenViewModel(
             }
             is FileScreenUIEvent.Rename -> rename(event.fileId, event.newName)
             is FileScreenUIEvent.Sort -> sort(event.sortType, event.sortOrder)
-            FileScreenUIEvent.RefreshData -> onAppear()
+            FileScreenUIEvent.RefreshOnAppear -> onAppear()
+            FileScreenUIEvent.RefreshData -> updateContents()
             is FileScreenUIEvent.CreateNewFile -> {}
             is FileScreenUIEvent.CreateNewFolder -> createNewFolder(event.folderName)
             FileScreenUIEvent.Search -> backStack.add(SearchScreen)
@@ -210,6 +192,46 @@ class FileScreenViewModel(
             }
             FileScreenUIEvent.OpenTransferScreen -> backStack.add(Transfer)
             is FileScreenUIEvent.UploadFile -> uploadFile(event.uri)
+        }
+    }
+
+    private fun loadContents() {
+        viewModelScope.launch {
+            _state.value = state.value.copy(isLoadingFiles = true)
+            val response = if (fileNode.id == "-1") repository.getRootFiles()
+            else repository.getChildren(fileNode.id)
+
+            if (response is FileResponse.Successful) {
+                _state.value = state.value.copy(
+                    isLoadingFiles = false,
+                    children = response.data.sortedByDescending { it.type.toString() }
+                )
+            } else if (response is FileResponse.Failure) {
+                _state.value = state.value.copy(
+                    isLoadingFiles = false,
+                    errorMessage = response.message
+                )
+            }
+        }
+    }
+
+    private fun updateContents() {
+        _state.value = state.value.copy(isRefreshing = true)
+        viewModelScope.launch {
+            delay(100) // Let Compose show the refresh indicator before this runs
+            val response = if (fileNode.id == "-1") repository.getRootFiles()
+            else repository.getChildren(fileNode.id)
+
+            if (response is FileResponse.Successful) {
+                _state.value = state.value.copy(
+                    isRefreshing = false,
+                    errorMessage = null,
+                    children = response.data.sortedByDescending { it.type.toString() }
+                )
+            } else if (response is FileResponse.Failure) {
+                _state.value = state.value.copy(isRefreshing = false)
+                _effect.emit(FileScreenUIEffect.ShowSnackBar(response.message))
+            }
         }
     }
 

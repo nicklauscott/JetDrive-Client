@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun JetDriveButton(
     modifier: Modifier = Modifier,
-    isLoginIn: Boolean,
+    isLoading: Boolean,
     text: String,
     onClick: () -> Unit,
 ) {
@@ -29,7 +29,7 @@ fun JetDriveButton(
         ),
         contentPadding = PaddingValues(12.dp)
     ) {
-        if (!isLoginIn) {
+        if (!isLoading) {
             Text(
                 text = text,
                 color = MaterialTheme.colorScheme.onPrimary,

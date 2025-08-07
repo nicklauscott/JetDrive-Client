@@ -7,9 +7,11 @@ import com.niclauscott.jetdrive.core.transfer.data.repository.TransferServiceCon
 import com.niclauscott.jetdrive.core.transfer.data.service.ResumeWorker
 import com.niclauscott.jetdrive.core.transfer.domain.repository.AppTransferRepository
 import com.niclauscott.jetdrive.core.transfer.domain.repository.TransferServiceController
+import org.koin.androidx.workmanager.factory.KoinWorkerFactory
 import org.koin.dsl.module
 
 val appTransferModule = module {
+    single { KoinWorkerFactory() }
     factory<AppTransferRepository> { AppAppTransferRepositoryImpl(get()) }
     factory<TransferServiceController> { TransferServiceControllerImpl(get()) }
     factory { (context: Context, params: WorkerParameters) ->

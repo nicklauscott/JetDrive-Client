@@ -1,10 +1,9 @@
 package com.niclauscott.jetdrive.features.auth.data.repository
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import com.niclauscott.jetdrive.core.datastore.UserPreferences
+import com.niclauscott.jetdrive.core.domain.dto.ErrorMessageDTO
 import com.niclauscott.jetdrive.core.domain.dto.TokenPairResponseDTO
-import com.niclauscott.jetdrive.core.domain.util.TAG
 import com.niclauscott.jetdrive.features.auth.domain.model.constant.AuthResponse
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.LoginRequestDTO
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.RegisterRequestDTO
@@ -16,7 +15,6 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -29,7 +27,6 @@ class AuthRepositoryImpl(
 ): AuthRepository {
 
     override suspend fun login(loginRequestDTO: LoginRequestDTO): AuthResponse {
-        Log.d(TAG("AuthRepositoryImpl"), "login: address $baseUrl")
         return try {
             val response = client.request("$baseUrl/auth/login") {
                 method = HttpMethod.Post
@@ -40,10 +37,9 @@ class AuthRepositoryImpl(
                 setBody(loginRequestDTO)
             }
 
-
             if (response.status != HttpStatusCode.OK) {
-                val message = response.bodyAsText()
-                return AuthResponse.LoginFailed(message)
+                val message = response.body<ErrorMessageDTO>()
+                return AuthResponse.LoginFailed(message.message)
             }
 
             val loginDTO = response.body<TokenPairResponseDTO>()
@@ -75,11 +71,10 @@ class AuthRepositoryImpl(
             }
 
             if (response.status != HttpStatusCode.OK) {
-                val message = response.bodyAsText()
-                return AuthResponse.RegistrationFailure(message)
+                val message = response.body<ErrorMessageDTO>()
+                return AuthResponse.RegistrationFailure(message.message)
             }
 
-            //val responseDTO = response.body<RegisterResponseDTO>()
             AuthResponse.RegistrationSuccessful
         } catch (e: ResponseException) {
             val errorMessage = when (val statusCode = e.response.status) {

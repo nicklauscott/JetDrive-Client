@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -33,7 +32,6 @@ import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUiState
 fun HomeScreenPortrait(
     modifier: Modifier = Modifier,
     state: HomeScreenUiState,
-    paddingValues: PaddingValues,
     onFileNodeClick: (FileNode) -> Unit
 ) {
     val context = LocalContext.current
@@ -77,7 +75,6 @@ fun HomeScreenPortrait(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = paddingValues.calculateTopPadding())
                     .padding(horizontal = 2.percentOfScreenWidth())
             ) {
 

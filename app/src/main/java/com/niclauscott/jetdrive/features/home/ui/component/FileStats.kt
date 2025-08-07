@@ -13,27 +13,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -86,21 +80,6 @@ fun MinimalStatsCard(stats: UserFileStats) {
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
                 )
-
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Storage,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .wrapContentSize()
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -166,7 +145,7 @@ fun MinimalStatsCard(stats: UserFileStats) {
                 InfoRow(
                     label = getString(context, R.string.smallest_file),
                     value = formatFileSize(stats.smallestFileSize.toLong()),
-                    icon = Icons.Default.TrendingDown
+                    icon = Icons.AutoMirrored.Filled.TrendingDown
                 )
             }
         }
@@ -344,7 +323,7 @@ fun StatsCard(stats: UserFileStats) {
                     modifier = Modifier.weight(0.5f),
                     label = getString(context, R.string.largest_file),
                     value = formatFileSize(stats.largestFileSize.toLong()),
-                    icon = Icons.Default.TrendingUp
+                    icon = Icons.AutoMirrored.Filled.TrendingUp
                 )
             }
 
@@ -381,7 +360,7 @@ fun StatsCard(stats: UserFileStats) {
                 InfoRow(
                     label = getString(context, R.string.smallest_file),
                     value = formatFileSize(stats.smallestFileSize.toLong()),
-                    icon = Icons.Default.TrendingDown
+                    icon = Icons.AutoMirrored.Filled.TrendingDown
                 )
             }
         }

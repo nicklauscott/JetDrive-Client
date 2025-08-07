@@ -175,7 +175,6 @@ fun FileTransferTopBarPortrait(
 
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                         IconButton(onClick = {
-                            // pause specific transfer
                             if (isCurrentScreenDownload) {
                                 onTransferAction(TransferAction.ToggleSpecificTransfers(TransferType.DOWNLOAD))
                                 return@IconButton
@@ -223,10 +222,12 @@ fun FileTransferTopBarPortrait(
                                 x = with(LocalDensity.current) { offset.x.toDp()  },
                                 y = with(LocalDensity.current) { offset.y.toDp()  }
                             ),
+                            isDownloadScreen = isCurrentScreenDownload,
                             expanded = showMoreOption,
                             isAllTransferPaused = isAllTransferPaused,
                             onDismiss = { showMoreOption = false }
                         ) {
+                            showMoreOption = false
                             when (it) {
                                 TransferActions.ToggleAllTransfer -> onTransferAction(TransferAction.ToggleAllTransfer)
                                 TransferActions.CancelUploads -> {
@@ -410,10 +411,12 @@ fun FileTransferTopBarLandscape(
                                 x = with(LocalDensity.current) { offset.x.toDp()  },
                                 y = with(LocalDensity.current) { offset.y.toDp()  }
                             ),
+                            isDownloadScreen = isCurrentScreenDownload,
                             expanded = showMoreOption,
                             isAllTransferPaused = isAllTransferPaused,
                             onDismiss = { showMoreOption = false }
                         ) {
+                            showMoreOption = false
                             when (it) {
                                 TransferActions.ToggleAllTransfer -> onTransferAction(TransferAction.ToggleAllTransfer)
                                 TransferActions.CancelUploads -> {
@@ -494,6 +497,7 @@ fun FileTransferTopBarLandscape(
 fun FileTransferDropDownMenu(
     modifier: Modifier = Modifier,
     offset: DpOffset,
+    isDownloadScreen: Boolean,
     expanded: Boolean = false,
     isAllTransferPaused: Boolean,
     onDismiss: () -> Unit,
@@ -510,7 +514,10 @@ fun FileTransferDropDownMenu(
             onDismissRequest = onDismiss,
             modifier = Modifier,
         ) {
-            TransferActions.entries.forEach { item ->
+            TransferActions.entries.filterNot {
+                it == if (isDownloadScreen)  TransferActions.CancelUploads
+                else TransferActions.CancelDownloads
+            }.forEach { item ->
                 DropdownMenuItem(
                     text = {
                         val text = if (item == TransferActions.ToggleAllTransfer) {

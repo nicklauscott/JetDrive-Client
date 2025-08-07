@@ -22,14 +22,7 @@ import org.koin.dsl.module
 
 val httpClientModule = module {
 
-    factory<String> {
-        val baseUrl = if ((1..10).random() % 2 == 0) "http://localhost:8001"
-        else "http://127.0.0.1:8001"
-        //baseUrl
-
-        //"http://192.168.4.3:8001"
-        "http://192.168.54.127:8001"
-    }
+    factory<String> { "https://jetdrive.onrender.com" }
 
     single<TokenStorage> { DataStoreTokenStorage(get()) }
 

@@ -80,7 +80,9 @@ fun LandingScreenNavigationRoot(
 
                 is ProfileScreen -> {
                     NavEntry(key = key) {
-                        val viewModel: ProfileScreenViewModel = koinViewModel()
+                        val viewModel: ProfileScreenViewModel = koinViewModel {
+                            parametersOf(landingScreenViewModel)
+                        }
                         ProfileScreen(viewModel = viewModel)
                     }
                 }

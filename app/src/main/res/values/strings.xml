@@ -23,6 +23,7 @@
     <string name="cancel">Cancel</string>
     <string name="show_more">Show more</string>
     <string name="delete_message">Move to trash?</string>
+    <string name="logout_message">Confirm logout?</string>
     <string name="delete">Delete</string>
     <string name="create_folder_icon">Create new folder</string>
     <string name="move">Move</string>
@@ -61,5 +62,6 @@
     <string name="added">Added</string>
     <string name="modified">Last Modified</string>
     <string name="details">Details</string>
+    <string name="logout">Logout</string>
 
 </resources>

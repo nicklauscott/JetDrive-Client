@@ -1,10 +1,18 @@
 package com.niclauscott.jetdrive.features.auth.ui.screen.register.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,21 +20,59 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.niclauscott.jetdrive.core.ui.component.JetDriveButton
 import com.niclauscott.jetdrive.core.ui.component.JetDriveLink
 import com.niclauscott.jetdrive.core.ui.component.JetDrivePasswordField
 import com.niclauscott.jetdrive.core.ui.component.JetDriveTextField
 import com.niclauscott.jetdrive.features.auth.domain.model.dto.RegisterRequestDTO
+import com.niclauscott.jetdrive.features.auth.ui.screen.component.AuthHeaderSection
+
+@Composable
+fun RegisterScreenPortrait(
+    modifier: Modifier = Modifier,
+    isRegistering: Boolean,
+    onLoginClicked: () -> Unit,
+    onRegisterClicked: (RegisterRequestDTO) -> Unit,
+) {
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = modifier.padding(top = if (!imeVisible) 32.dp else 16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp),
+    ) {
+        AnimatedVisibility(visible = !imeVisible) {
+            AuthHeaderSection(
+                modifier = Modifier.fillMaxWidth(),
+                title = "Sign Up",
+                description = "Create a Jet Drive account."
+            )
+        }
+
+        RegisterFormSection(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .imePadding(),
+            isRegistering = isRegistering,
+            imeVisible = imeVisible,
+            onLoginClicked = onLoginClicked,
+            onRegisterClicked = onRegisterClicked
+        )
+    }
+}
 
 @Composable
 fun RegisterFormSection(
     modifier: Modifier = Modifier,
-    isLoginIn: Boolean,
-    hideButtonLink: Boolean,
+    isRegistering: Boolean,
+    imeVisible: Boolean,
     onLoginClicked: () -> Unit,
     onRegisterClicked: (RegisterRequestDTO) -> Unit,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     var emailText by remember { mutableStateOf("") }
     var firstNameText by remember { mutableStateOf("") }
     var lastNameText by remember { mutableStateOf("") }
@@ -78,8 +124,8 @@ fun RegisterFormSection(
         JetDriveTextField(
             text = emailText,
             onValueChange = {
-                emailError = !it.matches(emailPattern)
-                emailText = it
+                emailError = !it.trim().matches(emailPattern)
+                emailText = it.trim()
             },
             label = "Email",
             hint = "john.doe@example.com",
@@ -121,8 +167,9 @@ fun RegisterFormSection(
 
         JetDriveButton(
             text = "Sign Up",
-            isLoginIn = isLoginIn,
+            isLoading = isRegistering,
             onClick = {
+                keyboardController?.hide()
                 firstNameError = firstNameText.length < 3 || firstNameText.any { char -> char.isDigit()  }
                 lastNameError = lastNameText.length < 3 || lastNameText.any { char -> char.isDigit()  }
                 emailError = !emailText.matches(emailPattern)
@@ -138,7 +185,7 @@ fun RegisterFormSection(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        AnimatedVisibility(visible = !hideButtonLink) {
+        AnimatedVisibility(visible = !imeVisible) {
             JetDriveLink(
                 text = "Already have an account?",
                 onClick = onLoginClicked,

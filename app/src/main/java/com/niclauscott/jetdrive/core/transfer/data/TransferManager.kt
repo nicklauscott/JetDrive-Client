@@ -1,11 +1,10 @@
 package com.niclauscott.jetdrive.core.transfer.data
 
 import android.content.Context
-import android.util.Log
 import androidx.core.net.toUri
-import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
-import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
+import com.niclauscott.jetdrive.core.sync.data.repository.FileSyncRepository
 import com.niclauscott.jetdrive.core.transfer.data.service.DownloadService
 import com.niclauscott.jetdrive.core.transfer.data.service.UploadService
 import com.niclauscott.jetdrive.core.transfer.domain.model.IncompleteTransfer
@@ -30,6 +29,7 @@ object TransferManager: KoinComponent {
     private val context: Context by inject()
     private val client: HttpClient by inject()
     private val repository: AppTransferRepository by inject()
+    private val syncRepository: FileSyncRepository by inject()
 
     private val dbScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val progressScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -42,9 +42,6 @@ object TransferManager: KoinComponent {
     fun init() {
         dbScope.launch {
             repository.getAllIncompleteTransfer().collect { list ->
-                Log.d(TAG("TransferManager"), "init -> list: $list")
-
-                // Cancel inactive transfer job if already launched
                 val inactiveTransfers = activeJobs.filterKeys { !list.map { transfer -> transfer.task.transferId }.contains(it) }
                 inactiveTransfers.forEach { (k, v) -> v.second.cancel(); activeJobs.remove(k) }
 
@@ -56,7 +53,6 @@ object TransferManager: KoinComponent {
                 if (prioritizedTransfer != null && !currentlyRunning.contains(prioritizedTransfer.task.transferId)) {
                     val prioritizedType = prioritizedTransfer.type
 
-                    // Find currently running job of the same type with lower priority
                     val lowerPrioritySameTypeJob = activeJobs.entries.find { (transferId, _) ->
                         val runningTransfer = list.find { it.task.transferId == transferId }
                         runningTransfer != null &&
@@ -65,13 +61,11 @@ object TransferManager: KoinComponent {
                     }
 
                     if (lowerPrioritySameTypeJob != null) {
-                        // Cancel the lower-priority job of the same type
                         lowerPrioritySameTypeJob.value.second.cancel()
                         activeJobs.remove(lowerPrioritySameTypeJob.key)
 
                         processNextTransfer(prioritizedTransfer.type, list)
                     } else {
-                        // No job to preempt — check for idle slots per type
                         val hasIdleUpload = list.any {
                             it.type == IncompleteTransfer.TransferType.UPLOAD &&
                                     !activeJobs.containsKey(it.task.transferId)
@@ -104,7 +98,6 @@ object TransferManager: KoinComponent {
     private fun processNextTransfer(
         isIdleType: IncompleteTransfer.TransferType, transfer: List<IncompleteTransfer>
     ) {
-        Log.d(TAG("UploadService"), "processNextTransfer !!! isIdleType: $isIdleType")
         when(isIdleType) {
             IncompleteTransfer.TransferType.UPLOAD -> {
                 transfer.find { it.type == IncompleteTransfer.TransferType.UPLOAD }?.let {
@@ -137,11 +130,11 @@ object TransferManager: KoinComponent {
                         baseUrl = baseUrl, client = client,
                         upload = uploadTask, inputStream = stream,
                         repository = repository,
+                        syncRepository = syncRepository
                     )
                     uploadService.init()
                 }
             } catch (e: Exception) {
-                Log.d(TAG("TransferManager"), "Upload error: ${e.message}")
                 val uploadStatus = repository.getUploadStatusById(task.task.transferId)
                 uploadStatus?.let { repository.saveUploadStatus(it.copy(status = TransferStatus.FAILED)) }
             } finally {
@@ -163,7 +156,6 @@ object TransferManager: KoinComponent {
                     downloadService.init()
                 }
             } catch (e: Exception) {
-                Log.d(TAG("DownloadService"), ": download error: ${e.message}")
                 val downloadStatus = repository.getDownloadStatusById(task.task.transferId)
                 downloadStatus?.let { repository.saveDownloadStatus(it.copy(status = TransferStatus.FAILED)) }
             } finally {

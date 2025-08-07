@@ -3,6 +3,7 @@ package com.niclauscott.jetdrive.features.home.ui
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -26,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,9 +42,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
 import com.niclauscott.jetdrive.R
 import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.domain.util.openFileFromCache
+import com.niclauscott.jetdrive.core.ui.component.TransferServicePermissionHandler
+import com.niclauscott.jetdrive.core.ui.component.hasTransferServicePermission
 import com.niclauscott.jetdrive.core.ui.util.DeviceConfiguration
 import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
+import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CreateNewFolderDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DownloadProgressDialog
 import com.niclauscott.jetdrive.features.home.ui.component.HomeScreenLandscape
 import com.niclauscott.jetdrive.features.home.ui.component.HomeScreenPortrait
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
@@ -59,9 +66,16 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
     var showCreateFolderDialog by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
+    var requestPermission by remember { mutableStateOf(false) }
+    var permissionGranted by remember { mutableStateOf(false) }
+
     val activeTransfer by viewModel.activeTransfer.collectAsState()
     val state = viewModel.state
+    val previewState by viewModel.downloadProgress.collectAsState()
     val context = LocalContext.current
+    var toast by remember { mutableStateOf<Toast?>(null) }
+
+    LaunchedEffect(Unit) { permissionGranted = hasTransferServicePermission(context) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -77,6 +91,21 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
         }
     }
 
+    if (requestPermission) {
+        TransferServicePermissionHandler(
+            onPermissionGranted = {
+                requestPermission = false
+                permissionGranted = true
+            },
+            onPermissionDenied = {
+                requestPermission = false
+                permissionGranted = false
+                toast?.cancel()
+                toast = Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT)
+                toast?.show()
+            }
+        )
+    }
 
     if (showCreateFolderDialog) {
         CreateNewFolderDialog(
@@ -84,6 +113,32 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
         ) { folderName ->
             viewModel.onEvent(HomeScreenUIEvent.CreateNewFolder(folderName))
             showCreateFolderDialog = false
+        }
+    }
+
+    if (previewState is FileProgress.Loading) {
+        DownloadProgressDialog((previewState as FileProgress.Loading).percent) {
+            viewModel.onEvent(HomeScreenUIEvent.CancelDownload)
+        }
+    }
+
+    if (previewState is FileProgress.Success) {
+        val file = (previewState as FileProgress.Success).data
+        LaunchedEffect(file) {
+            openFileFromCache(
+                context = context,
+                mimeType = viewModel.mimeType,
+                file = file
+            )
+        }
+    }
+
+    if (previewState is FileProgress.Failure) {
+        val message = (previewState as FileProgress.Failure).error
+        LaunchedEffect(message) {
+            toast?.cancel()
+            toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
+            toast?.show()
         }
     }
 
@@ -113,7 +168,11 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
             ) { fileAction ->
                 when (fileAction) {
                     FileActions.CreateFolder -> showCreateFolderDialog = true
-                    FileActions.UploadFile -> launcher.launch(arrayOf("*/*"))
+                    FileActions.UploadFile -> {
+                        if (permissionGranted) {
+                            launcher.launch(arrayOf("*/*"))
+                        } else requestPermission = true
+                    }
                 }
                 showBottomSheet = false
             }
@@ -161,9 +220,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
 
                 when (deviceConfiguration) {
                     DeviceConfiguration.MOBILE_PORTRAIT -> {
-                        HomeScreenPortrait(
-                            modifier = innerModifier, state = state.value, paddingValues = paddingValues
-                        ) {
+                        HomeScreenPortrait(modifier = innerModifier, state = state.value) {
                             viewModel.onEvent(HomeScreenUIEvent.OpenFileNode(it))
                         }
                     }

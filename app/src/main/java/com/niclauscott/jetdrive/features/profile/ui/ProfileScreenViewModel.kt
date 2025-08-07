@@ -1,13 +1,15 @@
 package com.niclauscott.jetdrive.features.profile.ui
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.niclauscott.jetdrive.core.domain.util.TAG
+import androidx.navigation3.runtime.NavBackStack
 import com.niclauscott.jetdrive.core.sync.domain.service.FileEventManager
+import com.niclauscott.jetdrive.core.ui.navigation.Login
+import com.niclauscott.jetdrive.features.auth.ui.screen.register.state.RegisterScreenUIEvent
+import com.niclauscott.jetdrive.features.landing.ui.LandingScreenViewModel
 import com.niclauscott.jetdrive.features.profile.domain.constant.ProfileResponse
 import com.niclauscott.jetdrive.features.profile.domain.repository.ProfileRepository
 import com.niclauscott.jetdrive.features.profile.ui.state.ProfileScreenUIEffect
@@ -22,7 +24,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @FlowPreview
-class ProfileScreenViewModel(private val repository: ProfileRepository): ViewModel() {
+class ProfileScreenViewModel(
+    private val repository: ProfileRepository,
+    private val landingScreenViewModel: LandingScreenViewModel
+): ViewModel() {
 
     private val _state: MutableState<ProfileScreenUiState> = mutableStateOf(ProfileScreenUiState())
     val state: State<ProfileScreenUiState> = _state
@@ -44,6 +49,16 @@ class ProfileScreenViewModel(private val repository: ProfileRepository): ViewMod
         when (event) {
             is ProfileScreenUiEvent.EditProfileName -> updateProfile(event.firstName, event.lastName)
             is ProfileScreenUiEvent.UploadProfilePicture -> uploadProfilePicture(event.uri)
+            ProfileScreenUiEvent.Logout -> logout()
+        }
+    }
+
+    private fun logout() {
+        viewModelScope.launch {
+            repository.logout()
+            landingScreenViewModel.rootBackStack.clear()
+            landingScreenViewModel.rootBackStack.add(Login(state.value.profileData?.email))
+            landingScreenViewModel.changeScreen(0)
         }
     }
 

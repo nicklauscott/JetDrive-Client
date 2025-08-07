@@ -1,13 +1,16 @@
 package com.niclauscott.jetdrive.core.transfer.data.service
 
-import android.util.Log
-import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.upload.UploadStatus
-import com.niclauscott.jetdrive.core.domain.util.TAG
+import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
+import com.niclauscott.jetdrive.core.sync.data.repository.FileSyncRepository
+import com.niclauscott.jetdrive.core.sync.domain.service.FileEventManager
+import com.niclauscott.jetdrive.core.sync.domain.service.FileSystemEvent
 import com.niclauscott.jetdrive.core.transfer.data.model.dto.upload.UploadInitiateRequest
 import com.niclauscott.jetdrive.core.transfer.data.model.dto.upload.UploadInitiateResponse
 import com.niclauscott.jetdrive.core.transfer.data.model.dto.upload.UploadProgressResponse
 import com.niclauscott.jetdrive.core.transfer.domain.repository.AppTransferRepository
+import com.niclauscott.jetdrive.features.file.data.model.dto.FileNodeDTO
+import com.niclauscott.jetdrive.features.file.domain.mapper.toFileNode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -16,23 +19,21 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
 
 class UploadService(
     baseUrl: String, private val client: HttpClient,
     upload: UploadStatus, private val inputStream: InputStream,
     private val repository: AppTransferRepository,
+    private val syncRepository: FileSyncRepository,
 ) {
     private val initiateUrl = "$baseUrl/files/upload/initiate"
     private val uploadChunkUrl: (String) -> String = { "$baseUrl/files/upload/$it" }
@@ -152,13 +153,15 @@ class UploadService(
         }
 
         if (completeResponse.status.isSuccess()) {
-            Log.d(TAG("UploadService"), "uploadOrResumeChunks: completeResponse body: ${completeResponse.bodyAsText()}")
             val status = getUploadStats(uploadStatus.uploadId.toString())
             repository.saveUploadStatus(uploadStatus.copy(
                 uploadedBytes = status.uploadedBytes,
                 uploadedChunks = status.uploadedChunks,
                 status = TransferStatus.COMPLETED
             ))
+            val fileNode = try { completeResponse.body<FileNodeDTO>().toFileNode() } catch (_: Exception) { null }
+            FileEventManager.emit(FileSystemEvent.FileCreated(fileNode, uploadStatus.parentId ?: "root"))
+            syncRepository.invalidate(uploadStatus.parentId ?: "root")
         }
     }
 

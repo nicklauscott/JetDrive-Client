@@ -16,6 +16,7 @@ sealed interface FileScreenUIEvent {
     data class CreateNewFolder(val folderName: String) : FileScreenUIEvent
     data class CreateNewFile(val folderName: String) : FileScreenUIEvent
     data class UploadFile(val uri: String): FileScreenUIEvent
+    data object RefreshOnAppear: FileScreenUIEvent
     data object RefreshData: FileScreenUIEvent
     data object Search : FileScreenUIEvent
     data object CancelDownload : FileScreenUIEvent

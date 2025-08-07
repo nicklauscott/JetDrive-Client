@@ -36,9 +36,9 @@ class TransferRepositoryImpl(
 
     override suspend fun cancelAllTransfer() {
         val uploads = dao.getIncompleteUploads().first()
-        uploads.forEach { dao.saveUploadStatus(it.copy(status = TransferStatus.CANCELLED)) }
+        uploads.forEach { dao.deleteUploadById(it.id) }
         val downloads = dao.getIncompleteDownloads().first()
-        downloads.forEach { dao.saveDownloadStatus(it.copy(status = TransferStatus.CANCELLED)) }
+        downloads.forEach { dao.deleteDownloadById(it.id) }
     }
 
     override suspend fun pauseAllSpecificTransfer(type: TransferType) {
@@ -65,12 +65,12 @@ class TransferRepositoryImpl(
     override suspend fun cancelAllSpecificTransfer(type: TransferType) {
         if (type == TransferType.UPLOAD) {
             val uploads = dao.getIncompleteUploads().first()
-            uploads.forEach { dao.saveUploadStatus(it.copy(status = TransferStatus.CANCELLED)) }
+            uploads.forEach { dao.deleteUploadById(it.id) }
             return
         }
 
         val downloads = dao.getIncompleteDownloads().first()
-        downloads.forEach { dao.saveDownloadStatus(it.copy(status = TransferStatus.CANCELLED)) }
+        downloads.forEach { dao.deleteDownloadById(it.id) }
     }
 
     override suspend fun toggleTransfer(transferId: UUID, type: TransferType) {

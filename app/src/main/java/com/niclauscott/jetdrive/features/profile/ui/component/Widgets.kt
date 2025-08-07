@@ -75,9 +75,7 @@ fun RenameProfileNameDialog(
     }
 
     Dialog(
-        onDismissRequest = {
-            if (!isLoading) onDismiss()
-        },
+        onDismissRequest = {},
         properties = DialogProperties(
             dismissOnBackPress = !isLoading,
             dismissOnClickOutside = !isLoading

@@ -12,13 +12,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -55,6 +59,7 @@ fun ProfileCellPortrait(
     user: User, updatingProfile: Boolean,
     imageUploading: Boolean,
     onPhotoEdit: (String) -> Unit,
+    onLogoutClick: () -> Unit,
     onEditClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -89,6 +94,8 @@ fun ProfileCellPortrait(
             modifier = Modifier.size(80.dp),
             contentAlignment = Alignment.Center
         ) {
+
+            Log.d(TAG("ProfileCellPortrait"), "ProfileCellPortrait: user: $user")
 
             if (imageUploading) {
                 CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 1.5.dp)
@@ -236,6 +243,27 @@ fun ProfileCellPortrait(
                     }
 
                 }
+
+                IconButton(
+                    onClick = onLogoutClick,
+                    enabled = !updatingProfile,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    if (!updatingProfile) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = getString(context, R.string.logout),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                }
             }
 
             // Email
@@ -258,6 +286,7 @@ fun ProfileCellLandscape(
     user: User, updatingProfile: Boolean,
     imageUploading: Boolean,
     onPhotoEdit: (String) -> Unit,
+    onLogoutClick: () -> Unit,
     onEditClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -280,9 +309,35 @@ fun ProfileCellLandscape(
     Column(
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            IconButton(
+                onClick = onLogoutClick,
+                enabled = !updatingProfile,
+                modifier = Modifier.size(40.dp)
+            ) {
+                if (!updatingProfile) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = getString(context, R.string.logout),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Profile Image Section
         Box(
             modifier = Modifier.size(80.dp),
