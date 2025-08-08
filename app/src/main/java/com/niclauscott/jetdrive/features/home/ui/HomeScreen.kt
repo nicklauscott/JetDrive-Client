@@ -50,6 +50,7 @@ import com.niclauscott.jetdrive.core.ui.util.percentOfScreenHeight
 import com.niclauscott.jetdrive.features.file.domain.constant.FileProgress
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.CreateNewFolderDialog
 import com.niclauscott.jetdrive.features.file.ui.screen.file_list.component.DownloadProgressDialog
+import com.niclauscott.jetdrive.features.file.ui.screen.file_list.state.FileScreenUIEvent
 import com.niclauscott.jetdrive.features.home.ui.component.HomeScreenLandscape
 import com.niclauscott.jetdrive.features.home.ui.component.HomeScreenPortrait
 import com.niclauscott.jetdrive.features.home.ui.state.HomeScreenUIEvent
@@ -125,11 +126,8 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeScreenViewModel) {
     if (previewState is FileProgress.Success) {
         val file = (previewState as FileProgress.Success).data
         LaunchedEffect(file) {
-            openFileFromCache(
-                context = context,
-                mimeType = viewModel.mimeType,
-                file = file
-            )
+            openFileFromCache(context = context, mimeType = viewModel.mimeType, file = file)
+            viewModel.onEvent(HomeScreenUIEvent.CancelDownload)
         }
     }
 

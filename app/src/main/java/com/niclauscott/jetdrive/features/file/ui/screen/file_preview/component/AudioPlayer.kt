@@ -73,15 +73,9 @@ fun AudioPlayer(
         else -> {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 AndroidView(
-                    modifier = Modifier.size(5.dp),
-                    factory = { context ->
-                        PlayerView(context).apply {
-                            this.player = player
-                        }
-                    },
-                    update = { playerView ->
-                        playerView.player = player
-                    }
+                    modifier = Modifier.size(0.dp),
+                    factory = { context -> PlayerView(context).apply { this.player = player } },
+                    update = { playerView -> playerView.player = player }
                 )
             }
 

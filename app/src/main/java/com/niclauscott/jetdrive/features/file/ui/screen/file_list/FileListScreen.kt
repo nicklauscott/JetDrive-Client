@@ -148,13 +148,9 @@ fun FileListScreen(modifier: Modifier = Modifier, viewModel: FileScreenViewModel
 
     if (previewState is FileProgress.Success) {
         val file = (previewState as FileProgress.Success).data
-
         LaunchedEffect(file) {
-            openFileFromCache(
-                context = context,
-                mimeType = viewModel.mimeType,
-                file = file
-            )
+            openFileFromCache(context = context, mimeType = viewModel.mimeType, file = file)
+            viewModel.onEvent(FileScreenUIEvent.CancelDownload)
         }
     }
 

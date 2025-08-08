@@ -52,19 +52,6 @@ sealed interface TransferAction {
     data class CancelSpecificTransfers(val transferType: TransferType): TransferAction
 }
 
-/*
-        -------------------------------------------------------------------------------
-          <- Transfer                                                       ||>     :
-                                                                            ------------------
-                                                                           | Cancel Uploads   |
-                                                                           | Cancel Downloads |
-                                                                           | ||> All          |
-                                                                           | Cancel All       |
-                                                                            ------------------
-          Downloads                                                          Uploads
-        -------------------------------------------------------------------------------
- */
-
 enum class TransferActions(val displayName: String) {
     ToggleAllTransfer(""),
     CancelUploads("Cancel Uploads"),
@@ -530,7 +517,6 @@ fun FileTransferDropDownMenu(
                     onClick = { onClick(item) }
                 )
             }
-
         }
     }
 

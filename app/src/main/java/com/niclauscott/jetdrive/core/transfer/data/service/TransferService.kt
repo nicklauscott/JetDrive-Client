@@ -29,7 +29,10 @@ class TransferService: Service() {
                 val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (progress.progress != null) {
                     notificationManager.notify(1, createProgressNotification(progress.fileName, progress.progress))
-                } else notificationManager.notify(1, createNotification())
+                } else {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    notificationManager.cancel(1) // notificationManager.notify(1, createNotification())
+                 }
             }
         }
         return START_STICKY

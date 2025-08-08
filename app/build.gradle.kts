@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,29 +18,32 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    signingConfigs {
+        create("release") {
+            storeFile = file("/Users/mac/my-release-key.jks")
+            storePassword = project.property("KEYSTORE_PASSWORD") as String
+            keyAlias = project.property("KEY_ALIAS") as String
+            keyPassword = project.property("KEY_PASSWORD") as String
+        }
 
-        /*
-       val properties = Properties()
-       val file = project.rootProject.file("local.properties")
-       properties.load(file.inputStream())
+        getByName("debug") {
+            storeFile = file("/Users/mac/my-release-key.jks")
+            storePassword = project.property("KEYSTORE_PASSWORD") as String
+            keyAlias = project.property("KEY_ALIAS") as String
+            keyPassword = project.property("KEY_PASSWORD") as String
 
-       //KEYSTORE_PASSWORD=your-store-password
-
-        buildConfigField("String", "KEYSTORE_PASSWORD", properties.getProperty("KEYSTORE_PASSWORD"))
-        */
-
+        }
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-            signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
+
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
         }
@@ -56,16 +57,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-
-    signingConfigs {
-        getByName("debug") {
-            storeFile = file("/Users/mac/my-release-key.jks")
-            storePassword = project.property("KEYSTORE_PASSWORD") as String
-            keyAlias = project.property("KEY_ALIAS") as String
-            keyPassword = project.property("KEY_PASSWORD") as String
-
-        }
     }
 }
 

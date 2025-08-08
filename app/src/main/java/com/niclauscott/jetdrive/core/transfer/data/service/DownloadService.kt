@@ -1,6 +1,7 @@
 package com.niclauscott.jetdrive.core.transfer.data.service
 
 import android.content.Context
+import android.media.MediaScannerConnection
 import android.os.Environment
 import com.niclauscott.jetdrive.core.database.domain.constant.TransferStatus
 import com.niclauscott.jetdrive.core.database.data.entities.downloads.DownloadStatus
@@ -13,18 +14,15 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
 
 class DownloadService(
     baseUrl: String, private val client: HttpClient,
-    context: Context, private val downloadStatus: DownloadStatus,
+    private val context: Context, private val downloadStatus: DownloadStatus,
     private val repository: AppTransferRepository,
 ) {
     private val chunkSize = 1024 * 1024L
     private val downloadUrl: (String) -> String = { "$baseUrl/files/download/$it" }
-
     private val recentSpeed = mutableListOf<Double>()
-    private var run = AtomicBoolean(true)
 
     private var tempDir: File = File(context.filesDir, "JetDrive/.tmp")
     private val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -108,6 +106,7 @@ class DownloadService(
 
         mergeFiles(finalFile, tempDir)
         deleteDirectoryRecursively(tempDir)
+        scanFile(context, finalFile)
         dbDownloadStatus?.let { repository.saveDownloadStatus(it.copy(status = TransferStatus.COMPLETED)) }
     }
 
@@ -140,4 +139,11 @@ class DownloadService(
             else -> "Others"
         }
     }
+
+    private fun scanFile(context: Context, file: File) {
+        MediaScannerConnection.scanFile(
+            context, arrayOf(file.absolutePath), null, null
+        )
+    }
+
 }
