@@ -1,4 +1,4 @@
-# 📂 JetDrive-Client (Android)
+# 📂 JetDrive (Android)
 
 **A secure and modern Android client for cloud file management — with resumable uploads/downloads, offline caching, and real-time sync.**
 
