@@ -102,6 +102,7 @@ class UploadService(
         var chunkIndex = 1
 
         while (start < total) {
+            if (repository.getUploadStatusById(uploadStatus.id)?.status == TransferStatus.PAUSED) return
             val buffer = ByteArray(chunkSize)
             val read = withContext(Dispatchers.IO) { inputStream.read(buffer) }
             if (read == -1) break
