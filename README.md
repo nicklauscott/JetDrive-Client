@@ -19,6 +19,20 @@ Built with **Kotlin**, **Jetpack Compose**, and **Koin** for dependency injectio
 
 ---
 
+## 📸 Screenshots
+
+| Login Screen | File Browser | Transfer Queue | Image Preview |
+|--------------|--------------|----------------|---------------|
+| ![Login](assets/ScreenShot1.jpg) | ![Browser](assets/ScreenShot3.jpg) | ![Transfers](assets/ScreenShot6.jpg) | ![Preview](assets/ScreenShot5.jpg) |
+
+---
+
+## 🎥 Video Demo
+
+[![Watch the demo](assets/ScreenShot2.jpg)](https://raw.githubusercontent.com/nicklauscott/JetDrive-Client/main/assets/Demo.mp4)
+
+---
+
 ## 🏗 Architecture
 
 | Layer            | Technology / Approach                                          |
