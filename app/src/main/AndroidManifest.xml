@@ -33,7 +33,7 @@
         </activity>
         <meta-data
             android:name="com.google.android.gms.client_id"
-            android:value="@string/server_client_id" />
+            android:value="${google_client_id}" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

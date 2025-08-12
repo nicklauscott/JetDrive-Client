@@ -31,7 +31,7 @@ class TransferService: Service() {
                     notificationManager.notify(1, createProgressNotification(progress.fileName, progress.progress))
                 } else {
                     stopForeground(STOP_FOREGROUND_REMOVE)
-                    notificationManager.cancel(1) // notificationManager.notify(1, createNotification())
+                    notificationManager.cancel(1)
                  }
             }
         }

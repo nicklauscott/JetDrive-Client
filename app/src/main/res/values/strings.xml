@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Jet Drive</string>
     <string name="google_login">Google oauth login icon</string>
-    <string name="server_client_id">551260504895-mofqeookk23lmol3g8r9npjol9r03fm5.apps.googleusercontent.com</string>
     <string name="home_screen">Home</string>
     <string name="file_screen">File</string>
     <string name="profile_screen">Profile</string>

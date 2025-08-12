@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.first
 
 class GoogleAuth(
     private val baseUrl: String, private val client: HttpClient,
+    private val clientId: String,
     private val dataStore: DataStore<UserPreferences>
 ): OAuthClient {
 
@@ -42,7 +43,7 @@ class GoogleAuth(
             listOf(
                 GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(getString(context, R.string.server_client_id))
+                    .setServerClientId(clientId)
                     .build()
             )
         )

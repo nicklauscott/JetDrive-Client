@@ -1,5 +1,6 @@
 package com.niclauscott.jetdrive.core.http_client.di
 
+import com.niclauscott.jetdrive.BuildConfig
 import com.niclauscott.jetdrive.core.http_client.token_provider.AuthPlugin
 import com.niclauscott.jetdrive.core.http_client.token_provider.DataStoreTokenStorage
 import com.niclauscott.jetdrive.core.http_client.token_provider.TokenHolder
@@ -22,7 +23,7 @@ import org.koin.dsl.module
 
 val httpClientModule = module {
 
-    factory<String> { "https://jetdrive.onrender.com" }
+    single<String> { BuildConfig.BASE_URL }
 
     single<TokenStorage> { DataStoreTokenStorage(get()) }
 
